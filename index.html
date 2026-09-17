@@ -1,0 +1,2543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dream Play</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f1f4f7;
+  color: #182230;
+}
+
+.header {
+  background: #00b509;
+  color: white;
+  padding: 25px 15px 30px;
+  text-align: center;
+}
+
+.logo {
+  font-size: 42px;
+  font-weight: bold;
+  margin-bottom: 25px;
+}
+
+.tabs {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tab-button {
+  width: auto;
+  min-width: 135px;
+  padding: 18px 25px;
+  border: none;
+  border-radius: 18px;
+  background: white;
+  color: #087b20;
+  font-size: 21px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.tab-button.active {
+  background: #006d08;
+  color: white;
+}
+
+.admin-button {
+  margin: 18px auto 0;
+  width: auto;
+  min-width: 270px;
+  padding: 17px 25px;
+  border: none;
+  border-radius: 18px;
+  background: #182230;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 0 15px 50px;
+}
+
+.card {
+  background: white;
+  border-radius: 22px;
+  padding: 28px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+}
+
+h2 {
+  font-size: 32px;
+  margin-top: 0;
+}
+
+h3 {
+  font-size: 24px;
+}
+
+.message {
+  padding: 16px;
+  background: #fff7d6;
+  border-left: 6px solid #ffb000;
+  border-radius: 12px;
+  font-size: 18px;
+  margin-bottom: 18px;
+}
+
+.error {
+  background: #ffe0e0;
+  border-left: 6px solid #e00000;
+  padding: 16px;
+  border-radius: 12px;
+  color: #9d0000;
+}
+
+.success {
+  background: #dcffe2;
+  border-left: 6px solid #00a51a;
+  padding: 16px;
+  border-radius: 12px;
+  color: #006d12;
+}
+
+.load-button {
+  width: 100%;
+  padding: 20px;
+  border: none;
+  border-radius: 16px;
+  background: #008f09;
+  color: white;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.load-button:active,
+.tab-button:active,
+.admin-button:active,
+.amount-button:active,
+.team-button:active {
+  transform: scale(0.97);
+}
+
+.match {
+  background: white;
+  border-radius: 20px;
+  padding: 22px;
+  margin-bottom: 18px;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.10);
+}
+
+.teams {
+  font-size: 23px;
+  font-weight: bold;
+  line-height: 1.35;
+  margin-bottom: 12px;
+}
+
+.status {
+  color: #008020;
+  font-size: 17px;
+  font-weight: bold;
+  margin-bottom: 14px;
+}
+
+.date {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.score {
+  background: #f4f4f4;
+  padding: 14px;
+  border-radius: 12px;
+  margin-top: 9px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.view-button {
+  margin-top: 16px;
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  background: #087f23;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.back-button {
+  background: #333;
+  color: white;
+  border: none;
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-size: 17px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.amount-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.amount-button {
+  padding: 20px 10px;
+  border: 2px solid #008f09;
+  border-radius: 14px;
+  background: white;
+  color: #007b09;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.team-button {
+  padding: 20px 10px;
+  border: 2px solid #087f23;
+  border-radius: 14px;
+  background: white;
+  color: #087f23;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+input {
+  width: 100%;
+  padding: 16px;
+  margin: 8px 0 14px;
+  border: 1px solid #bbb;
+  border-radius: 12px;
+  font-size: 18px;
+}
+
+.primary-button {
+  width: 100%;
+  padding: 17px;
+  border: none;
+  border-radius: 13px;
+  background: #008f09;
+  color: white;
+  font-size: 19px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.room-player {
+  background: #f2f2f2;
+  padding: 18px;
+  border-radius: 14px;
+  margin: 10px 0;
+}
+
+.player-name {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.player-team {
+  color: #087f23;
+  margin-top: 5px;
+}
+
+.admin-room {
+  background: #f5f5f5;
+  padding: 18px;
+  border-radius: 15px;
+  margin-bottom: 14px;
+}
+
+.small-button {
+  border: none;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #333;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+
+  .logo {
+    font-size: 34px;
+  }
+
+  .tab-button {
+    min-width: 105px;
+    padding: 15px 12px;
+    font-size: 18px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  h2 {
+    font-size: 28px;
+  }
+
+  .amount-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+  <div class="logo">
+    🏏 Dream Play
+  </div>
+
+  <div class="tabs">
+
+    <button class="tab-button active" id="liveTab">
+      Live
+    </button>
+
+    <button class="tab-button" id="upcomingTab">
+      Upcoming
+    </button>
+
+    <button class="tab-button" id="finishedTab">
+      Finished
+    </button>
+
+  </div>
+
+  <button class="admin-button" id="adminButton">
+    🔐 Admin Login
+  </button>
+
+</header>
+
+
+<div class="container">
+
+  <!-- HOME -->
+
+  <section id="homePage">
+
+    <div class="card">
+
+      <h2 id="pageTitle">
+        Live Matches
+      </h2>
+
+      <div class="message" id="mainMessage">
+        Press the button to load matches.
+      </div>
+
+      <button class="load-button" id="loadButton">
+        🔄 Load Cricket Matches
+      </button>
+
+    </div>
+
+    <div id="matches"></div>
+
+  </section>
+
+
+  <!-- MATCH DETAILS -->
+
+  <section id="matchPage" class="hidden">
+
+    <div class="card">
+
+      <button class="back-button" id="backMatchButton">
+        ← Back
+      </button>
+
+      <h2 id="matchTitle">
+        Match
+      </h2>
+
+      <div class="message" id="matchStatus">
+        Select a category.
+      </div>
+
+      <h3>
+        🎮 Choose H2H Category
+      </h3>
+
+      <div class="amount-grid">
+
+        <button class="amount-button" data-amount="250">
+          ₹250
+        </button>
+
+        <button class="amount-button" data-amount="500">
+          ₹500
+        </button>
+
+        <button class="amount-button" data-amount="750">
+          ₹750
+        </button>
+
+        <button class="amount-button" data-amount="1000">
+          ₹1000
+        </button>
+
+        <button class="amount-button" data-amount="1500">
+          ₹1500
+        </button>
+
+        <button class="amount-button" data-amount="2000">
+          ₹2000
+        </button>
+
+      </div>
+
+      <div id="teamSection" class="hidden">
+
+        <h3>
+          🏏 Choose Your Team
+        </h3>
+
+        <div class="team-grid" id="teamGrid"></div>
+
+      </div>
+
+      <div id="playerSection" class="hidden">
+
+        <h3>
+          👤 Player Information
+        </h3>
+
+        <input
+          type="text"
+          id="playerName"
+          placeholder="Enter your name"
+        >
+
+        <input
+          type="tel"
+          id="playerPhone"
+          placeholder="Enter phone number"
+        >
+
+        <button class="primary-button" id="joinButton">
+          🎮 Join H2H
+        </button>
+
+      </div>
+
+      <div id="joinMessage"></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ROOM -->
+
+  <section id="roomPage" class="hidden">
+
+    <div class="card">
+
+      <button class="back-button" id="backRoomButton">
+        ← Back
+      </button>
+
+      <h2>
+        🏏 H2H Room
+      </h2>
+
+      <div id="roomInfo"></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ADMIN LOGIN -->
+
+  <section id="adminLoginPage" class="hidden">
+
+    <div class="card">
+
+      <button class="back-button" id="backAdminLoginButton">
+        ← Back
+      </button>
+
+      <h2>
+        🔐 Admin Login
+      </h2>
+
+      <div class="message">
+        Admin access only.
+      </div>
+
+      <input
+        type="email"
+        id="adminEmail"
+        placeholder="Admin email"
+      >
+
+      <input
+        type="password"
+        id="adminPassword"
+        placeholder="Admin password"
+      >
+
+      <button class="primary-button" id="adminLoginButton">
+        🔐 Login
+      </button>
+
+      <div id="adminLoginMessage"></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ADMIN PANEL -->
+
+  <section id="adminPage" class="hidden">
+
+    <div class="card">
+
+      <h2>
+        🔐 Admin Panel
+      </h2>
+
+      <div class="success">
+        Admin login successful.
+      </div>
+
+      <button class="primary-button" id="refreshRoomsButton">
+        🔄 Refresh Rooms
+      </button>
+
+      <button
+        class="small-button"
+        id="adminLogoutButton"
+      >
+        Logout
+      </button>
+
+    </div>
+
+    <div class="card">
+
+      <h2>
+        🎮 H2H Rooms
+      </h2>
+
+      <div id="adminRooms">
+        Loading rooms...
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   DREAM PLAY SETTINGS
+   ===================================================== */
+
+
+/*
+   CricketData API key supplied by the user.
+   Replace this key later before public deployment.
+*/
+
+var API_KEY =
+  "8cb19c27-33b3-4947-ba30-6f99642786ae";
+
+
+/* Firebase project */
+
+var firebaseConfig = {
+
+  apiKey:
+    "AIzaSyDNJpHm2zUExVeSumw3IJAtcpaY-VFa5Ks",
+
+  authDomain:
+    "dream-play-5147c.firebaseapp.com",
+
+  projectId:
+    "dream-play-5147c",
+
+  storageBucket:
+    "dream-play-5147c.firebasestorage.app",
+
+  messagingSenderId:
+    "565687121147",
+
+  appId:
+    "1:565687121147:web:abdde5ce352642684f6c5e",
+
+  measurementId:
+    "G-3Z8Z9WHNQX"
+};
+
+
+/*
+   Admin UID
+*/
+
+var ADMIN_UID =
+  "6EsKceYMINh1Hiq9LRDH637HhlL2";
+
+
+/* =====================================================
+   GLOBAL VARIABLES
+   ===================================================== */
+
+var allMatches = [];
+
+var currentTab = "live";
+
+var selectedMatch = null;
+
+var selectedAmount = null;
+
+var selectedTeam = null;
+
+var currentUser = null;
+
+var firebaseApp = null;
+
+var firebaseAuth = null;
+
+var firebaseStore = null;
+
+var roomListener = null;
+
+
+/* =====================================================
+   DOM HELPER
+   ===================================================== */
+
+function byId(id) {
+
+  return document.getElementById(id);
+
+}
+
+
+/* =====================================================
+   SHOW PAGE
+   ===================================================== */
+
+function showPage(pageId) {
+
+  byId("homePage").classList.add("hidden");
+  byId("matchPage").classList.add("hidden");
+  byId("roomPage").classList.add("hidden");
+  byId("adminLoginPage").classList.add("hidden");
+  byId("adminPage").classList.add("hidden");
+
+  byId(pageId).classList.remove("hidden");
+
+}
+
+
+/* =====================================================
+   FIREBASE LOADER
+   ===================================================== */
+
+async function getFirebase() {
+
+  if (
+    firebaseApp &&
+    firebaseAuth &&
+    firebaseStore
+  ) {
+
+    return;
+
+  }
+
+
+  var appModule =
+    await import(
+      "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js"
+    );
+
+
+  var authModule =
+    await import(
+      "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js"
+    );
+
+
+  var storeModule =
+    await import(
+      "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js"
+    );
+
+
+  firebaseApp =
+    appModule.initializeApp(firebaseConfig);
+
+
+  firebaseAuth = {
+    module: authModule,
+    auth:
+      authModule.getAuth(firebaseApp)
+  };
+
+
+  firebaseStore = {
+    module: storeModule,
+    db:
+      storeModule.getFirestore(firebaseApp)
+  };
+
+}
+
+
+/* =====================================================
+   ESCAPE HTML
+   ===================================================== */
+
+function escapeHTML(value) {
+
+  if (value === null ||
+      value === undefined) {
+
+    return "";
+
+  }
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* =====================================================
+   SET TAB
+   ===================================================== */
+
+function setTab(tab) {
+
+  currentTab = tab;
+
+  byId("liveTab").classList.remove("active");
+  byId("upcomingTab").classList.remove("active");
+  byId("finishedTab").classList.remove("active");
+
+
+  if (tab === "live") {
+
+    byId("liveTab").classList.add("active");
+
+    byId("pageTitle").textContent =
+      "Live Matches";
+
+  }
+
+
+  if (tab === "upcoming") {
+
+    byId("upcomingTab").classList.add("active");
+
+    byId("pageTitle").textContent =
+      "Upcoming Matches";
+
+  }
+
+
+  if (tab === "finished") {
+
+    byId("finishedTab").classList.add("active");
+
+    byId("pageTitle").textContent =
+      "Finished Matches";
+
+  }
+
+
+  displayMatches();
+
+}
+
+
+/* =====================================================
+   MATCH TYPE
+   ===================================================== */
+
+function getMatchType(match) {
+
+  if (match.matchEnded === true) {
+
+    return "finished";
+
+  }
+
+
+  if (match.matchStarted === true) {
+
+    return "live";
+
+  }
+
+
+  return "upcoming";
+
+}
+
+
+/* =====================================================
+   LOAD CRICKET MATCHES
+   ===================================================== */
+
+async function loadMatches() {
+
+  var message =
+    byId("mainMessage");
+
+  var matchesDiv =
+    byId("matches");
+
+
+  message.className =
+    "message";
+
+
+  message.innerHTML =
+    "⏳ Connecting to CricketData...";
+
+
+  matchesDiv.innerHTML = "";
+
+
+  if (!API_KEY ||
+      API_KEY.indexOf("PASTE") === 0) {
+
+    message.className =
+      "error";
+
+    message.innerHTML =
+      "❌ Please add your CricketData API key.";
+
+    return;
+
+  }
+
+
+  var url =
+    "https://api.cricapi.com/v1/currentMatches?apikey=" +
+    encodeURIComponent(API_KEY) +
+    "&offset=0";
+
+
+  try {
+
+    var response =
+      await fetch(url);
+
+
+    var data =
+      await response.json();
+
+
+    console.log("CricketData:", data);
+
+
+    if (
+      !data ||
+      data.status !== "success"
+    ) {
+
+      message.className =
+        "error";
+
+
+      message.innerHTML =
+        "❌ CricketData API Error.";
+
+
+      matchesDiv.innerHTML =
+        "<div class='card'>" +
+        "<pre>" +
+        escapeHTML(
+          JSON.stringify(
+            data,
+            null,
+            2
+          )
+        ) +
+        "</pre>" +
+        "</div>";
+
+
+      return;
+
+    }
+
+
+    if (
+      !data.data ||
+      !Array.isArray(data.data)
+    ) {
+
+      allMatches = [];
+
+      message.innerHTML =
+        "ℹ️ No matches found.";
+
+      return;
+
+    }
+
+
+    allMatches =
+      data.data;
+
+
+    message.className =
+      "success";
+
+
+    message.innerHTML =
+      "✅ API Connected — " +
+      allMatches.length +
+      " matches found";
+
+
+    displayMatches();
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+
+    message.className =
+      "error";
+
+
+    message.innerHTML =
+      "❌ Connection Error";
+
+
+    matchesDiv.innerHTML =
+      "<div class='card error'>" +
+      "<b>Error:</b><br><br>" +
+      escapeHTML(error.message) +
+      "</div>";
+
+  }
+
+}
+
+
+/* =====================================================
+   DISPLAY MATCHES
+   ===================================================== */
+
+function displayMatches() {
+
+  var matchesDiv =
+    byId("matches");
+
+
+  matchesDiv.innerHTML = "";
+
+
+  var filtered =
+    allMatches.filter(
+      function(match) {
+
+        return getMatchType(match) ===
+          currentTab;
+
+      }
+    );
+
+
+  if (filtered.length === 0) {
+
+    matchesDiv.innerHTML =
+      "<div class='card'>" +
+      "<h3>ℹ️ No " +
+      currentTab +
+      " matches found.</h3>" +
+      "</div>";
+
+    return;
+
+  }
+
+
+  filtered.forEach(
+    function(match) {
+
+      createMatchCard(match);
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   CREATE MATCH CARD
+   ===================================================== */
+
+function createMatchCard(match) {
+
+  var matchesDiv =
+    byId("matches");
+
+
+  var box =
+    document.createElement("div");
+
+
+  box.className =
+    "match";
+
+
+  var teams =
+    "Teams unavailable";
+
+
+  if (
+    match.teams &&
+    Array.isArray(match.teams) &&
+    match.teams.length >= 2
+  ) {
+
+    teams =
+      escapeHTML(match.teams[0]) +
+      " VS " +
+      escapeHTML(match.teams[1]);
+
+  }
+
+
+  var scoreHTML = "";
+
+
+  if (
+    match.score &&
+    Array.isArray(match.score)
+  ) {
+
+    match.score.forEach(
+      function(score) {
+
+        scoreHTML +=
+
+          "<div class='score'>" +
+
+          "🏏 " +
+          escapeHTML(
+            score.inning || ""
+          ) +
+
+          "<br>" +
+
+          "Runs: " +
+          escapeHTML(
+            score.r !== undefined
+              ? score.r
+              : 0
+          ) +
+
+          " | Wickets: " +
+          escapeHTML(
+            score.w !== undefined
+              ? score.w
+              : 0
+          ) +
+
+          " | Overs: " +
+          escapeHTML(
+            score.o !== undefined
+              ? score.o
+              : 0
+          ) +
+
+          "</div>";
+
+      }
+    );
+
+  }
+
+
+  var dateText = "";
+
+
+  if (match.date) {
+
+    dateText =
+      "<div class='date'>📅 " +
+      escapeHTML(match.date) +
+      "</div>";
+
+  }
+
+
+  box.innerHTML =
+
+    "<div class='teams'>" +
+    teams +
+    "</div>" +
+
+    "<div class='status'>" +
+    escapeHTML(
+      match.status ||
+      "Status unavailable"
+    ) +
+    "</div>" +
+
+    dateText +
+
+    scoreHTML +
+
+    "<button class='view-button'>" +
+    "🎮 View Match" +
+    "</button>";
+
+
+  var viewButton =
+    box.querySelector(
+      ".view-button"
+    );
+
+
+  viewButton.addEventListener(
+    "click",
+    function() {
+
+      openMatch(match);
+
+    }
+  );
+
+
+  matchesDiv.appendChild(box);
+
+}
+
+
+/* =====================================================
+   OPEN MATCH
+   ===================================================== */
+
+function openMatch(match) {
+
+  selectedMatch =
+    match;
+
+
+  selectedAmount =
+    null;
+
+
+  selectedTeam =
+    null;
+
+
+  byId("matchTitle").textContent =
+    getTeamText(match);
+
+
+  byId("matchStatus").textContent =
+    match.status ||
+    "Choose a category";
+
+
+  byId("teamSection")
+    .classList.add("hidden");
+
+
+  byId("playerSection")
+    .classList.add("hidden");
+
+
+  byId("joinMessage").innerHTML =
+    "";
+
+
+  showPage("matchPage");
+
+}
+
+
+/* =====================================================
+   GET TEAM TEXT
+   ===================================================== */
+
+function getTeamText(match) {
+
+  if (
+    match &&
+    match.teams &&
+    Array.isArray(match.teams) &&
+    match.teams.length >= 2
+  ) {
+
+    return (
+      match.teams[0] +
+      " VS " +
+      match.teams[1]
+    );
+
+  }
+
+
+  return "Cricket Match";
+
+}
+
+
+/* =====================================================
+   SELECT AMOUNT
+   ===================================================== */
+
+function selectAmount(amount) {
+
+  selectedAmount =
+    amount;
+
+
+  selectedTeam =
+    null;
+
+
+  byId("teamSection")
+    .classList.remove("hidden");
+
+
+  byId("playerSection")
+    .classList.add("hidden");
+
+
+  byId("joinMessage").innerHTML =
+    "";
+
+
+  var teamGrid =
+    byId("teamGrid");
+
+
+  teamGrid.innerHTML =
+    "";
+
+
+  var teams =
+    selectedMatch &&
+    selectedMatch.teams;
+
+
+  if (
+    !teams ||
+    !Array.isArray(teams) ||
+    teams.length < 2
+  ) {
+
+    teamGrid.innerHTML =
+      "<div class='error'>" +
+      "❌ Team information is unavailable." +
+      "</div>";
+
+    return;
+
+  }
+
+
+  teams.forEach(
+    function(team) {
+
+      var button =
+        document.createElement("button");
+
+
+      button.className =
+        "team-button";
+
+
+      button.textContent =
+        "🏏 " + team;
+
+
+      button.addEventListener(
+        "click",
+        function() {
+
+          selectTeam(team);
+
+        }
+      );
+
+
+      teamGrid.appendChild(button);
+
+    }
+  );
+
+
+  byId("teamSection")
+    .scrollIntoView({
+      behavior: "smooth"
+    });
+
+}
+
+
+/* =====================================================
+   SELECT TEAM
+   ===================================================== */
+
+function selectTeam(team) {
+
+  selectedTeam =
+    team;
+
+
+  byId("playerSection")
+    .classList.remove("hidden");
+
+
+  byId("joinMessage").innerHTML =
+
+    "<div class='success'>" +
+
+    "Category: ₹" +
+    escapeHTML(selectedAmount) +
+
+    "<br>" +
+
+    "Team: " +
+    escapeHTML(selectedTeam) +
+
+    "</div>";
+
+
+  byId("playerSection")
+    .scrollIntoView({
+      behavior: "smooth"
+    });
+
+}
+
+
+/* =====================================================
+   START ANONYMOUS USER
+   ===================================================== */
+
+async function startAnonymousUser() {
+
+  await getFirebase();
+
+
+  if (
+    firebaseAuth.auth.currentUser
+  ) {
+
+    currentUser =
+      firebaseAuth.auth.currentUser;
+
+    return;
+
+  }
+
+
+  var authModule =
+    firebaseAuth.module;
+
+
+  var result =
+    await authModule.signInAnonymously(
+      firebaseAuth.auth
+    );
+
+
+  currentUser =
+    result.user;
+
+}
+
+
+/* =====================================================
+   JOIN ROOM
+   ===================================================== */
+
+async function joinRoom() {
+
+  var message =
+    byId("joinMessage");
+
+
+  var name =
+    byId("playerName")
+      .value
+      .trim();
+
+
+  var phone =
+    byId("playerPhone")
+      .value
+      .trim();
+
+
+  if (!name) {
+
+    message.innerHTML =
+      "<div class='error'>" +
+      "❌ Please enter your name." +
+      "</div>";
+
+    return;
+
+  }
+
+
+  if (!phone) {
+
+    message.innerHTML =
+      "<div class='error'>" +
+      "❌ Please enter your phone number." +
+      "</div>";
+
+    return;
+
+  }
+
+
+  if (!selectedMatch) {
+
+    message.innerHTML =
+      "<div class='error'>" +
+      "❌ Please select a match." +
+      "</div>";
+
+    return;
+
+  }
+
+
+  if (!selectedAmount) {
+
+    message.innerHTML =
+      "<div class='error'>" +
+      "❌ Please select a category." +
+      "</div>";
+
+    return;
+
+  }
+
+
+  if (!selectedTeam) {
+
+    message.innerHTML =
+      "<div class='error'>" +
+      "❌ Please select your team." +
+      "</div>";
+
+    return;
+
+  }
+
+
+  message.innerHTML =
+    "<div class='message'>" +
+    "⏳ Joining H2H room..." +
+    "</div>";
+
+
+  try {
+
+    await startAnonymousUser();
+
+
+    var store =
+      firebaseStore.module;
+
+
+    var db =
+      firebaseStore.db;
+
+
+    var matchId =
+      selectedMatch.id ||
+      selectedMatch.unique_id ||
+      (
+        selectedMatch.teams
+          ? selectedMatch.teams.join("_")
+          : "match"
+      );
+
+
+    var safeMatchId =
+      String(matchId)
+        .replace(
+          /[^a-zA-Z0-9_-]/g,
+          "_"
+        );
+
+
+    var roomId =
+      "room_" +
+      safeMatchId +
+      "_" +
+      selectedAmount;
+
+
+    var roomRef =
+      store.doc(
+        db,
+        "rooms",
+        roomId
+      );
+
+
+    var player = {
+
+      uid:
+        currentUser.uid,
+
+      name:
+        name,
+
+      team:
+        selectedTeam,
+
+      joinedAt:
+        store.serverTimestamp()
+
+    };
+
+
+    var roomSnap =
+      await store.getDoc(roomRef);
+
+
+    if (!roomSnap.exists()) {
+
+      await store.setDoc(
+        roomRef,
+        {
+
+          matchId:
+            String(matchId),
+
+          matchTitle:
+            getTeamText(selectedMatch),
+
+          amount:
+            selectedAmount,
+
+          playerA:
+            player,
+
+          playerB:
+            null,
+
+          status:
+            "waiting",
+
+          updatedAt:
+            store.serverTimestamp()
+
+        }
+      );
+
+    }
+
+    else {
+
+      var room =
+        roomSnap.data();
+
+
+      if (
+        room.playerA &&
+        room.playerA.uid ===
+        currentUser.uid
+      ) {
+
+        /* Already Player A */
+
+      }
+
+      else if (
+        room.playerB &&
+        room.playerB.uid ===
+        currentUser.uid
+      ) {
+
+        /* Already Player B */
+
+      }
+
+      else if (!room.playerB) {
+
+        await store.updateDoc(
+          roomRef,
+          {
+
+            playerB:
+              player,
+
+            status:
+              "ready",
+
+            updatedAt:
+              store.serverTimestamp()
+
+          }
+        );
+
+      }
+
+      else {
+
+        message.innerHTML =
+          "<div class='error'>" +
+          "❌ This H2H room is full." +
+          "<br><br>" +
+          "Try another category." +
+          "</div>";
+
+        return;
+
+      }
+
+    }
+
+
+    openRoom(
+      roomId,
+      matchId,
+      selectedAmount
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+
+    message.innerHTML =
+      "<div class='error'>" +
+
+      "❌ Firebase Error" +
+
+      "<br><br>" +
+
+      escapeHTML(
+        error.message
+      ) +
+
+      "</div>";
+
+  }
+
+}
+
+
+/* =====================================================
+   OPEN ROOM
+   ===================================================== */
+
+async function openRoom(
+  roomId,
+  matchId,
+  amount
+) {
+
+  showPage("roomPage");
+
+
+  byId("roomInfo").innerHTML =
+    "<div class='message'>" +
+    "⏳ Loading room..." +
+    "</div>";
+
+
+  try {
+
+    await getFirebase();
+
+
+    var store =
+      firebaseStore.module;
+
+
+    var db =
+      firebaseStore.db;
+
+
+    var roomRef =
+      store.doc(
+        db,
+        "rooms",
+        roomId
+      );
+
+
+    if (roomListener) {
+
+      roomListener();
+
+      roomListener =
+        null;
+
+    }
+
+
+    roomListener =
+      store.onSnapshot(
+        roomRef,
+        function(snapshot) {
+
+          if (!snapshot.exists()) {
+
+            byId("roomInfo").innerHTML =
+              "<div class='error'>" +
+              "❌ Room not found." +
+              "</div>";
+
+            return;
+
+          }
+
+
+          updateRoom(
+            snapshot.data()
+          );
+
+        },
+
+        function(error) {
+
+          byId("roomInfo").innerHTML =
+            "<div class='error'>" +
+            "❌ Room Error<br><br>" +
+            escapeHTML(
+              error.message
+            ) +
+            "</div>";
+
+        }
+      );
+
+  }
+
+  catch (error) {
+
+    byId("roomInfo").innerHTML =
+      "<div class='error'>" +
+      "❌ Firebase Error<br><br>" +
+      escapeHTML(
+        error.message
+      ) +
+      "</div>";
+
+  }
+
+}
+
+
+/* =====================================================
+   UPDATE ROOM UI
+   ===================================================== */
+
+function updateRoom(room) {
+
+  var html = "";
+
+
+  html +=
+    "<div class='success'>" +
+
+    "H2H Category: ₹" +
+    escapeHTML(room.amount) +
+
+    "<br><br>" +
+
+    escapeHTML(
+      room.matchTitle ||
+      "Cricket Match"
+    ) +
+
+    "</div>";
+
+
+  html +=
+    "<h3>👤 Players</h3>";
+
+
+  if (room.playerA) {
+
+    html +=
+
+      "<div class='room-player'>" +
+
+      "<div class='player-name'>" +
+      "Player A: " +
+      escapeHTML(
+        room.playerA.name
+      ) +
+      "</div>" +
+
+      "<div class='player-team'>" +
+      "🏏 Team: " +
+      escapeHTML(
+        room.playerA.team
+      ) +
+      "</div>" +
+
+      "</div>";
+
+  }
+
+  else {
+
+    html +=
+      "<div class='room-player'>" +
+      "Player A waiting..." +
+      "</div>";
+
+  }
+
+
+  if (room.playerB) {
+
+    html +=
+
+      "<div class='room-player'>" +
+
+      "<div class='player-name'>" +
+      "Player B: " +
+      escapeHTML(
+        room.playerB.name
+      ) +
+      "</div>" +
+
+      "<div class='player-team'>" +
+      "🏏 Team: " +
+      escapeHTML(
+        room.playerB.team
+      ) +
+      "</div>" +
+
+      "</div>";
+
+  }
+
+  else {
+
+    html +=
+
+      "<div class='room-player'>" +
+
+      "⏳ Waiting for another player..." +
+
+      "</div>";
+
+  }
+
+
+  if (room.status === "ready") {
+
+    html +=
+
+      "<div class='success'>" +
+
+      "🟢 Room Ready — 2 players joined." +
+
+      "</div>";
+
+  }
+
+  else {
+
+    html +=
+
+      "<div class='message'>" +
+
+      "⏳ Waiting for another player..." +
+
+      "</div>";
+
+  }
+
+
+  byId("roomInfo").innerHTML =
+    html;
+
+}
+
+
+/* =====================================================
+   ADMIN LOGIN PAGE
+   ===================================================== */
+
+function openAdminLogin() {
+
+  showPage(
+    "adminLoginPage"
+  );
+
+
+  byId("adminLoginMessage")
+    .innerHTML = "";
+
+}
+
+
+/* =====================================================
+   ADMIN LOGIN
+   ===================================================== */
+
+async function adminLogin() {
+
+  var email =
+    byId("adminEmail")
+      .value
+      .trim();
+
+
+  var password =
+    byId("adminPassword")
+      .value;
+
+
+  var message =
+    byId("adminLoginMessage");
+
+
+  if (!email) {
+
+    message.innerHTML =
+      "<div class='error'>" +
+      "❌ Enter admin email." +
+      "</div>";
+
+    return;
+
+  }
+
+
+  if (!password) {
+
+    message.innerHTML =
+      "<div class='error'>" +
+      "❌ Enter admin password." +
+      "</div>";
+
+    return;
+
+  }
+
+
+  message.innerHTML =
+    "<div class='message'>" +
+    "⏳ Logging in..." +
+    "</div>";
+
+
+  try {
+
+    await getFirebase();
+
+
+    var authModule =
+      firebaseAuth.module;
+
+
+    var result =
+      await authModule.signInWithEmailAndPassword(
+        firebaseAuth.auth,
+        email,
+        password
+      );
+
+
+    if (
+      result.user.uid !==
+      ADMIN_UID
+    ) {
+
+      await authModule.signOut(
+        firebaseAuth.auth
+      );
+
+
+      message.innerHTML =
+        "<div class='error'>" +
+        "❌ This account is not the Dream Play admin." +
+        "</div>";
+
+      return;
+
+    }
+
+
+    currentUser =
+      result.user;
+
+
+    message.innerHTML =
+      "<div class='success'>" +
+      "✅ Admin login successful." +
+      "</div>";
+
+
+    setTimeout(
+      function() {
+
+        openAdminPanel();
+
+      },
+      500
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+
+    message.innerHTML =
+      "<div class='error'>" +
+
+      "❌ Login failed" +
+
+      "<br><br>" +
+
+      escapeHTML(
+        error.message
+      ) +
+
+      "</div>";
+
+  }
+
+}
+
+
+/* =====================================================
+   OPEN ADMIN PANEL
+   ===================================================== */
+
+async function openAdminPanel() {
+
+  showPage(
+    "adminPage"
+  );
+
+
+  await loadAdminRooms();
+
+}
+
+
+/* =====================================================
+   LOAD ADMIN ROOMS
+   ===================================================== */
+
+async function loadAdminRooms() {
+
+  var div =
+    byId("adminRooms");
+
+
+  div.innerHTML =
+    "<div class='message'>" +
+    "⏳ Loading rooms..." +
+    "</div>";
+
+
+  try {
+
+    await getFirebase();
+
+
+    if (
+      !firebaseAuth.auth.currentUser
+    ) {
+
+      div.innerHTML =
+        "<div class='error'>" +
+        "❌ Please login as admin." +
+        "</div>";
+
+      return;
+
+    }
+
+
+    var store =
+      firebaseStore.module;
+
+
+    var db =
+      firebaseStore.db;
+
+
+    var roomsQuery =
+      store.collection(
+        db,
+        "rooms"
+      );
+
+
+    var snapshot =
+      await store.getDocs(
+        roomsQuery
+      );
+
+
+    if (snapshot.empty) {
+
+      div.innerHTML =
+        "<div class='message'>" +
+        "No H2H rooms yet." +
+        "</div>";
+
+      return;
+
+    }
+
+
+    div.innerHTML = "";
+
+
+    snapshot.forEach(
+      function(docSnap) {
+
+        var room =
+          docSnap.data();
+
+
+        var roomBox =
+          document.createElement(
+            "div"
+          );
+
+
+        roomBox.className =
+          "admin-room";
+
+
+        var playerA =
+          room.playerA
+            ? room.playerA.name
+            : "Waiting";
+
+
+        var playerB =
+          room.playerB
+            ? room.playerB.name
+            : "Waiting";
+
+
+        var teamA =
+          room.playerA
+            ? room.playerA.team
+            : "-";
+
+
+        var teamB =
+          room.playerB
+            ? room.playerB.team
+            : "-";
+
+
+        roomBox.innerHTML =
+
+          "<b>Room:</b> " +
+          escapeHTML(docSnap.id) +
+
+          "<br><br>" +
+
+          "<b>Match:</b> " +
+          escapeHTML(
+            room.matchTitle ||
+            "-"
+          ) +
+
+          "<br>" +
+
+          "<b>Category:</b> ₹" +
+          escapeHTML(
+            room.amount ||
+            "-"
+          ) +
+
+          "<br>" +
+
+          "<b>Status:</b> " +
+          escapeHTML(
+            room.status ||
+            "-"
+          ) +
+
+          "<hr>" +
+
+          "<b>Player A:</b> " +
+          escapeHTML(playerA) +
+
+          "<br>" +
+
+          "Team: " +
+          escapeHTML(teamA) +
+
+          "<br><br>" +
+
+          "<b>Player B:</b> " +
+          escapeHTML(playerB) +
+
+          "<br>" +
+
+          "Team: " +
+          escapeHTML(teamB);
+
+
+        div.appendChild(
+          roomBox
+        );
+
+      }
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+
+    div.innerHTML =
+      "<div class='error'>" +
+
+      "❌ Cannot load rooms." +
+
+      "<br><br>" +
+
+      escapeHTML(
+        error.message
+      ) +
+
+      "</div>";
+
+  }
+
+}
+
+
+/* =====================================================
+   ADMIN LOGOUT
+   ===================================================== */
+
+async function adminLogout() {
+
+  try {
+
+    if (firebaseAuth) {
+
+      await firebaseAuth.module
+        .signOut(
+          firebaseAuth.auth
+        );
+
+    }
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+  }
+
+
+  currentUser =
+    null;
+
+
+  showPage("homePage");
+
+}
+
+
+/* =====================================================
+   EVENT LISTENERS
+   ===================================================== */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function() {
+
+
+    /* Main tabs */
+
+    byId("liveTab")
+      .addEventListener(
+        "click",
+        function() {
+
+          showPage("homePage");
+
+          setTab("live");
+
+        }
+      );
+
+
+    byId("upcomingTab")
+      .addEventListener(
+        "click",
+        function() {
+
+          showPage("homePage");
+
+          setTab("upcoming");
+
+        }
+      );
+
+
+    byId("finishedTab")
+      .addEventListener(
+        "click",
+        function() {
+
+          showPage("homePage");
+
+          setTab("finished");
+
+        }
+      );
+
+
+    /* Load API */
+
+    byId("loadButton")
+      .addEventListener(
+        "click",
+        function() {
+
+          loadMatches();
+
+        }
+      );
+
+
+    /* Admin button */
+
+    byId("adminButton")
+      .addEventListener(
+        "click",
+        function() {
+
+          openAdminLogin();
+
+        }
+      );
+
+
+    /* Back from match */
+
+    byId("backMatchButton")
+      .addEventListener(
+        "click",
+        function() {
+
+          showPage("homePage");
+
+        }
+      );
+
+
+    /* Back from room */
+
+    byId("backRoomButton")
+      .addEventListener(
+        "click",
+        function() {
+
+          if (roomListener) {
+
+            roomListener();
+
+            roomListener =
+              null;
+
+          }
+
+          showPage("matchPage");
+
+        }
+      );
+
+
+    /* Back admin login */
+
+    byId("backAdminLoginButton")
+      .addEventListener(
+        "click",
+        function() {
+
+          showPage("homePage");
+
+        }
+      );
+
+
+    /* Amount buttons */
+
+    var amountButtons =
+      document.querySelectorAll(
+        ".amount-button"
+      );
+
+
+    amountButtons.forEach(
+      function(button) {
+
+        button.addEventListener(
+          "click",
+          function() {
+
+            var amount =
+              Number(
+                button.getAttribute(
+                  "data-amount"
+                )
+              );
+
+
+            selectAmount(
+              amount
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+    /* Join */
+
+    byId("joinButton")
+      .addEventListener(
+        "click",
+        function() {
+
+          joinRoom();
+
+        }
+      );
+
+
+    /* Admin login */
+
+    byId("adminLoginButton")
+      .addEventListener(
+        "click",
+        function() {
+
+          adminLogin();
+
+        }
+      );
+
+
+    /* Refresh admin */
+
+    byId("refreshRoomsButton")
+      .addEventListener(
+        "click",
+        function() {
+
+          loadAdminRooms();
+
+        }
+      );
+
+
+    /* Admin logout */
+
+    byId("adminLogoutButton")
+      .addEventListener(
+        "click",
+        function() {
+
+          adminLogout();
+
+        }
+      );
+
+
+    /* Start on Live */
+
+    setTab("live");
+
+
+  }
+);
+
+</script>
+
+</body>
+</html>
