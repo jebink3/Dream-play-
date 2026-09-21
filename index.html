@@ -1337,15 +1337,14 @@ const ADMIN_UID=
 const ADMIN_WHATSAPP=
 "917593011528";
 
-
 let firebaseApp=null;
 let auth=null;
 let db=null;
+let messaging=null;
 let firebaseReady=false;
-
+  
 let currentUser=null;
 let currentPlayer=null;
-
 let selectedMatch=null;
 let selectedAmount=null;
 let selectedPrize=null;
@@ -1391,7 +1390,10 @@ const firestoreModule=
 await import(
 "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js"
 );
-
+const messagingModule=
+await import(
+"https://www.gstatic.com/firebasejs/11.0.2/firebase-messaging.js"
+);
 firebaseApp=
 appModule.initializeApp(FIREBASE_CONFIG);
 
@@ -1400,7 +1402,8 @@ authModule.getAuth(firebaseApp);
 
 db=
 firestoreModule.getFirestore(firebaseApp);
-
+messaging=
+messagingModule.getMessaging(firebaseApp);
 window.firebaseFunctions={
 
 signInWithEmailAndPassword:
@@ -1410,7 +1413,10 @@ createUserWithEmailAndPassword:
 authModule.createUserWithEmailAndPassword,
 
 signOut:
-authModule.signOut
+authModule.signOut,
+
+getToken:
+messagingModule.getToken
 
 };
 
@@ -1420,7 +1426,63 @@ firestoreModule;
 firebaseReady=true;
 
 }
+/* =====================================================
+FCM ADMIN NOTIFICATIONS
+===================================================== */
 
+const FCM_VAPID_KEY =
+"BA80bWVpfKUNCSdNt1_gmvhhXEA-C4J86fnjk3S_JNpONjhC76cxJ-rf9HcO6onxBOp5o2TMYkisgy74s67kq-g";
+
+async function enableAdminNotifications(){
+
+if(!currentUser)return;
+
+if(currentUser.uid!==ADMIN_UID)return;
+
+try{
+
+const permission=
+await Notification.requestPermission();
+
+if(permission!=="granted"){
+
+console.log("Notification permission not granted.");
+
+return;
+
+}
+
+const token=
+await window.firebaseFunctions.getToken(
+messaging,
+{
+vapidKey:FCM_VAPID_KEY
+}
+);
+
+if(!token){
+
+console.log("FCM token not received.");
+
+return;
+
+}
+
+console.log(
+"Dream Play FCM token:",
+token
+);
+
+}catch(error){
+
+console.error(
+"FCM notification setup failed:",
+error
+);
+
+}
+
+  }
 
 /* =====================================================
 HELPERS
@@ -1891,7 +1953,7 @@ currentUser=
 credential.user;
 
 showAdminPage();
-
+await enableAdminNotifications();
 }catch(error){
 
 console.error(error);
