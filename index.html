@@ -1547,4 +1547,2422 @@ if(auth){
 
 await window
 .firebaseFunctions
-.signOut(aut
+.signOut(auth);
+
+}
+
+}catch(error){
+
+console.error(error);
+
+}
+
+currentUser=null;
+currentPlayer=null;
+selectedMatch=null;
+
+showLogin();
+
+}
+
+
+/* =====================================================
+ADMIN LOGIN
+===================================================== */
+
+async function adminLogin(){
+
+const email=
+document
+.getElementById("adminEmail")
+.value.trim();
+
+const password=
+document
+.getElementById("adminPassword")
+.value;
+
+const message=
+document
+.getElementById("adminLoginMessage");
+
+message.textContent="";
+
+if(!email||!password){
+
+message.textContent=
+"Please enter email and password.";
+
+return;
+
+}
+
+try{
+
+message.textContent=
+"Logging in...";
+
+await initFirebase();
+
+const {
+signInWithEmailAndPassword
+}=
+window.firebaseFunctions;
+
+const credential=
+await signInWithEmailAndPassword(
+auth,
+email,
+password
+);
+
+if(
+credential.user.uid!==ADMIN_UID
+){
+
+await window
+.firebaseFunctions
+.signOut(auth);
+
+throw new Error(
+"This account is not the Dream Play admin."
+);
+
+}
+
+currentUser=
+credential.user;
+
+showAdminPage();
+
+}catch(error){
+
+console.error(error);
+
+message.textContent=
+"Admin login failed: "+
+(error.message||
+error.code||
+"Unknown error");
+
+}
+
+}
+
+
+async function adminLogout(){
+
+try{
+
+if(auth){
+
+await window
+.firebaseFunctions
+.signOut(auth);
+
+}
+
+}catch(error){}
+
+currentUser=null;
+
+showLogin();
+
+}
+
+
+/* =====================================================
+CREATE MATCH
+===================================================== */
+
+async function createMatch(){
+
+const sport=
+document
+.getElementById("adminSport")
+.value;
+
+const teamA=
+document
+.getElementById("adminTeamA")
+.value.trim();
+
+const teamB=
+document
+.getElementById("adminTeamB")
+.value.trim();
+
+const date=
+document
+.getElementById("adminMatchDate")
+.value;
+
+const time=
+document
+.getElementById("adminMatchTime")
+.value;
+
+const message=
+document
+.getElementById("createMatchMessage");
+
+message.textContent="";
+
+if(!teamA||!teamB){
+
+message.textContent=
+"Please enter both teams.";
+
+return;
+
+}
+
+if(!date||!time){
+
+message.textContent=
+"Please select date and time.";
+
+return;
+
+}
+
+try{
+
+await initFirebase();
+
+const {
+collection,
+addDoc,
+serverTimestamp
+}=
+window.firestoreFunctions;
+
+await addDoc(
+
+collection(db,"matches"),
+
+{
+sport:sport,
+teamA:teamA,
+teamB:teamB,
+date:date,
+time:time,
+createdAt:serverTimestamp(),
+createdBy:ADMIN_UID
+}
+
+);
+
+message.textContent=
+"✅ Match published successfully.";
+
+document
+.getElementById("adminTeamA")
+.value="";
+
+document
+.getElementById("adminTeamB")
+.value="";
+
+loadAdminMatches();
+loadAdminStats();
+
+}catch(error){
+
+console.error(error);
+
+message.textContent=
+"Failed: "+
+(error.message||error.code);
+
+}
+
+}
+
+
+/* =====================================================
+PLAYER MATCHES
+===================================================== */
+
+async function loadPlayerMatches(){
+
+const box=
+document.getElementById("playerMatches");
+
+box.innerHTML=
+"Loading matches...";
+
+try{
+
+await initFirebase();
+
+const {
+collection,
+getDocs
+}=
+window.firestoreFunctions;
+
+const snapshot=
+await getDocs(
+collection(db,"matches")
+);
+
+const matches=[];
+
+snapshot.forEach(item=>{
+
+const data=item.data();
+
+if(data.date===todayString()){
+
+matches.push({
+id:item.id,
+...data
+});
+
+}
+
+});
+
+if(matches.length===0){
+
+box.innerHTML=
+'<div class="empty">No matches published for today.</div>';
+
+return;
+
+}
+
+box.innerHTML=
+matches.map(match=>`
+
+<div class="match-card">
+
+<div class="match-head">
+
+<span class="sport-label">
+
+${match.sport==="Football"
+?"⚽"
+:"🏏"}
+
+${escapeHtml(match.sport||"Sport")}
+
+</span>
+
+<span class="small">
+Today
+</span>
+
+</div>
+
+<div class="teams">
+
+${escapeHtml(match.teamA)}
+
+<br>
+
+<span class="vs">VS</span>
+
+<br>
+
+${escapeHtml(match.teamB)}
+
+</div>
+
+<div class="match-time">
+
+🕐
+${escapeHtml(
+fmtDateTime(
+match.date,
+match.time
+)
+)}
+
+</div>
+
+<button
+type="button"
+class="btn-blue"
+onclick="openMatch('${match.id}')">
+
+🏆 View H2H
+
+</button>
+
+</div>
+
+`).join("");
+
+}catch(error){
+
+console.error(error);
+
+box.innerHTML=
+'<div class="warning">Could not load matches.</div>';
+
+}
+
+}
+
+
+/* =====================================================
+OPEN MATCH
+===================================================== */
+
+async function openMatch(matchId){
+
+try{
+
+await initFirebase();
+
+const {
+doc,
+getDoc
+}=
+window.firestoreFunctions;
+
+const snapshot=
+await getDoc(
+doc(db,"matches",matchId)
+);
+
+if(!snapshot.exists()){
+
+alert("Match not found.");
+
+return;
+
+}
+
+selectedMatch={
+
+id:snapshot.id,
+...snapshot.data()
+
+};
+
+document
+.getElementById("detailSport")
+.textContent=
+selectedMatch.sport==="Football"
+?"⚽ Football"
+:"🏏 Cricket";
+
+document
+.getElementById("detailTitle")
+.textContent=
+selectedMatch.teamA+
+" vs "+
+selectedMatch.teamB;
+
+document
+.getElementById("detailTime")
+.textContent=
+"🕐 "+
+fmtDateTime(
+selectedMatch.date,
+selectedMatch.time
+);
+
+document
+.getElementById("detailTeamA")
+.textContent=
+selectedMatch.teamA;
+
+document
+.getElementById("detailTeamB")
+.textContent=
+selectedMatch.teamB;
+
+loadCategories();
+
+showMatchPage();
+
+}catch(error){
+
+console.error(error);
+
+alert(
+"Could not open match: "+
+(error.message||error.code)
+);
+
+}
+
+}
+
+
+function backToPlayer(){
+
+showPlayerPage();
+
+}
+
+
+/* =====================================================
+CATEGORIES
+===================================================== */
+
+function loadCategories(){
+
+const box=
+document.getElementById("categories");
+
+box.innerHTML=
+CONTESTS.map(c=>`
+
+<div class="category">
+
+<strong>
+₹${money(c.amount)}
+</strong>
+
+<div class="prize">
+Winning value ₹${money(c.prize)}
+</div>
+
+<button
+type="button"
+class="btn-blue"
+onclick="openJoinModal(${c.amount},${c.prize})">
+
+Join H2H
+
+</button>
+
+</div>
+
+`).join("");
+
+}
+
+
+/* =====================================================
+FIND WAITING ROOM
+===================================================== */
+
+async function findWaitingRoom(amount){
+
+const {
+collection,
+getDocs,
+query,
+where,
+limit
+}=
+window.firestoreFunctions;
+
+const q=
+query(
+
+collection(db,"rooms"),
+
+where(
+"matchId",
+"==",
+selectedMatch.id
+),
+
+where(
+"amount",
+"==",
+amount
+),
+
+where(
+"status",
+"==",
+"waiting"
+),
+
+limit(1)
+
+);
+
+const snapshot=
+await getDocs(q);
+
+if(snapshot.empty){
+
+return null;
+
+}
+
+const item=
+snapshot.docs[0];
+
+return{
+
+id:item.id,
+...item.data()
+
+};
+
+}
+
+
+/* =====================================================
+JOIN MODAL
+===================================================== */
+
+async function openJoinModal(
+amount,
+prize
+){
+
+if(!currentUser){
+
+alert("Please login first.");
+
+showLogin();
+
+return;
+
+}
+
+selectedAmount=amount;
+selectedPrize=prize;
+selectedTeam=null;
+waitingRoom=null;
+
+document
+.getElementById("joinAmount")
+.textContent=
+"₹"+money(amount);
+
+document
+.getElementById("joinPrize")
+.textContent=
+"₹"+money(prize);
+
+document
+.getElementById("teamAButton")
+.textContent=
+selectedMatch.teamA;
+
+document
+.getElementById("teamBButton")
+.textContent=
+selectedMatch.teamB;
+
+document
+.getElementById("teamAButton")
+.classList.remove(
+"selected",
+"disabled-team"
+);
+
+document
+.getElementById("teamBButton")
+.classList.remove(
+"selected",
+"disabled-team"
+);
+
+document
+.getElementById("joinRoomInfo")
+.textContent=
+"Checking available room...";
+
+document
+.getElementById("joinModal")
+.classList.remove("hidden");
+
+try{
+
+await initFirebase();
+
+waitingRoom=
+await findWaitingRoom(amount);
+
+if(waitingRoom){
+
+document
+.getElementById("joinRoomInfo")
+.textContent=
+"A player is already waiting. Choose the opposite team.";
+
+}else{
+
+document
+.getElementById("joinRoomInfo")
+.textContent=
+"No waiting player. You will create a new room.";
+
+}
+
+}catch(error){
+
+console.error(error);
+
+document
+.getElementById("joinRoomInfo")
+.textContent=
+"Could not check room.";
+
+}
+
+}
+
+
+function selectTeam(team){
+
+selectedTeam=team;
+
+document
+.getElementById("teamAButton")
+.classList.toggle(
+"selected",
+team==="A"
+);
+
+document
+.getElementById("teamBButton")
+.classList.toggle(
+"selected",
+team==="B"
+);
+
+if(waitingRoom){
+
+document
+.getElementById("teamAButton")
+.classList.toggle(
+"disabled-team",
+waitingRoom.player1Team==="A"
+);
+
+document
+.getElementById("teamBButton")
+.classList.toggle(
+"disabled-team",
+waitingRoom.player1Team==="B"
+);
+
+}
+
+}
+
+
+function closeJoinModal(){
+
+document
+.getElementById("joinModal")
+.classList.add("hidden");
+
+selectedAmount=null;
+selectedPrize=null;
+selectedTeam=null;
+waitingRoom=null;
+
+}
+
+
+/* =====================================================
+CHECK EXISTING ROOM
+===================================================== */
+
+async function playerAlreadyHasRoom(){
+
+const {
+collection,
+getDocs,
+query,
+where
+}=
+window.firestoreFunctions;
+
+const c=
+collection(db,"rooms");
+
+const q1=
+query(
+c,
+where("matchId","==",selectedMatch.id),
+where("amount","==",selectedAmount),
+where("player1Uid","==",currentUser.uid)
+);
+
+const q2=
+query(
+c,
+where("matchId","==",selectedMatch.id),
+where("amount","==",selectedAmount),
+where("player2Uid","==",currentUser.uid)
+);
+
+const [
+r1,
+r2
+]=
+await Promise.all([
+getDocs(q1),
+getDocs(q2)
+]);
+
+return !r1.empty||!r2.empty;
+
+}
+
+
+/* =====================================================
+JOIN H2H
+===================================================== */
+
+async function confirmJoin(){
+
+const button=
+document
+.getElementById("confirmJoinButton");
+
+if(!currentUser){
+
+alert("Please login first.");
+
+return;
+
+}
+
+if(!selectedMatch){
+
+alert("Please select a match.");
+
+return;
+
+}
+
+if(!selectedAmount){
+
+alert("Please select a contest.");
+
+return;
+
+}
+
+if(!selectedTeam){
+
+alert("Please select your team.");
+
+return;
+
+}
+
+button.disabled=true;
+button.textContent="Joining...";
+
+try{
+
+await initFirebase();
+
+const {
+doc,
+collection,
+runTransaction,
+writeBatch,
+serverTimestamp,
+arrayUnion
+}=
+window.firestoreFunctions;
+
+if(
+await playerAlreadyHasRoom()
+){
+
+throw new Error(
+"You already have an H2H room for this match and category."
+);
+
+}
+
+const waiting=
+await findWaitingRoom(
+selectedAmount
+);
+
+
+if(waiting){
+
+if(
+waiting.player1Team===
+selectedTeam
+){
+
+throw new Error(
+"You cannot select the same team as the waiting player."
+);
+
+}
+
+
+await runTransaction(
+
+db,
+
+async transaction=>{
+
+const roomRef=
+doc(
+db,
+"rooms",
+waiting.id
+);
+
+const roomSnap=
+await transaction.get(
+roomRef
+);
+
+if(!roomSnap.exists()){
+
+throw new Error(
+"Room is no longer available."
+);
+
+}
+
+const room=
+roomSnap.data();
+
+if(
+room.status!=="waiting"||
+room.playerCount!==1
+){
+
+throw new Error(
+"This room was just filled. Please try again."
+);
+
+}
+
+if(
+room.player1Team===
+selectedTeam
+){
+
+throw new Error(
+"That team is already selected."
+);
+
+}
+
+const memberRef=
+doc(
+db,
+"rooms",
+waiting.id,
+"members",
+currentUser.uid
+);
+
+transaction.update(
+
+roomRef,
+
+{
+player2Uid:
+currentUser.uid,
+
+player2Team:
+selectedTeam,
+
+playerCount:2,
+
+status:"full",
+
+updatedAt:
+serverTimestamp()
+}
+
+);
+
+transaction.set(
+
+memberRef,
+
+{
+uid:currentUser.uid,
+name:currentPlayer.name,
+phone:currentPlayer.phone,
+team:selectedTeam,
+joinedAt:serverTimestamp()
+}
+
+);
+
+const playerRef=
+doc(
+db,
+"players",
+currentUser.uid
+);
+
+transaction.set(
+
+playerRef,
+
+{
+activeRooms:
+arrayUnion(waiting.id),
+
+updatedAt:
+serverTimestamp()
+
+},
+
+{merge:true}
+
+);
+
+}
+
+);
+
+alert(
+"🎉 H2H joined successfully! The room is now FULL."
+);
+
+}else{
+
+
+/* CREATE ROOM */
+
+const batch=
+writeBatch(db);
+
+const roomRef=
+doc(
+collection(db,"rooms")
+);
+
+const memberRef=
+doc(
+db,
+"rooms",
+roomRef.id,
+"members",
+currentUser.uid
+);
+
+batch.set(
+
+roomRef,
+
+{
+matchId:selectedMatch.id,
+
+amount:selectedAmount,
+
+prize:selectedPrize,
+
+playerCount:1,
+
+status:"waiting",
+
+player1Uid:
+currentUser.uid,
+
+player1Team:
+selectedTeam,
+
+player2Uid:null,
+
+player2Team:null,
+
+winningTeam:null,
+
+winnerSetAt:null,
+
+winnerSetBy:null,
+
+createdAt:
+serverTimestamp(),
+
+updatedAt:
+serverTimestamp()
+
+}
+
+);
+
+
+batch.set(
+
+memberRef,
+
+{
+uid:currentUser.uid,
+
+name:currentPlayer.name,
+
+phone:currentPlayer.phone,
+
+team:selectedTeam,
+
+joinedAt:serverTimestamp()
+
+}
+
+);
+
+
+const playerRef=
+doc(
+db,
+"players",
+currentUser.uid
+);
+
+batch.set(
+
+playerRef,
+
+{
+activeRooms:
+arrayUnion(roomRef.id),
+
+updatedAt:
+serverTimestamp()
+
+},
+
+{merge:true}
+
+);
+
+await batch.commit();
+
+alert(
+"✅ H2H room created. Waiting for Player 2. ⏳"
+);
+
+}
+
+closeJoinModal();
+
+loadMyRooms();
+
+loadCategories();
+
+}catch(error){
+
+console.error(error);
+
+alert(
+"Join failed: "+
+(error.message||
+error.code||
+"Unknown error")
+);
+
+}finally{
+
+button.disabled=false;
+button.textContent="Join H2H";
+
+}
+
+}
+
+
+/* =====================================================
+MY ROOMS
+===================================================== */
+
+async function loadMyRooms(){
+
+const box=
+document.getElementById("myRooms");
+
+if(!currentUser){
+
+box.innerHTML=
+'<div class="empty">Please login.</div>';
+
+return;
+
+}
+
+box.innerHTML="Loading...";
+
+try{
+
+await initFirebase();
+
+const {
+collection,
+query,
+where,
+getDocs
+}=
+window.firestoreFunctions;
+
+const c=
+collection(db,"rooms");
+
+const q1=
+query(
+c,
+where(
+"player1Uid",
+"==",
+currentUser.uid
+)
+);
+
+const q2=
+query(
+c,
+where(
+"player2Uid",
+"==",
+currentUser.uid
+)
+);
+
+const [
+r1,
+r2
+]=
+await Promise.all([
+getDocs(q1),
+getDocs(q2)
+]);
+
+const map=
+new Map();
+
+r1.forEach(item=>{
+
+map.set(
+item.id,
+{
+id:item.id,
+...item.data()
+}
+);
+
+});
+
+r2.forEach(item=>{
+
+map.set(
+item.id,
+{
+id:item.id,
+...item.data()
+}
+);
+
+});
+
+const rooms=
+Array.from(map.values());
+
+if(rooms.length===0){
+
+box.innerHTML=
+'<div class="empty">No H2H rooms yet.</div>';
+
+return;
+
+}
+
+rooms.sort(
+(a,b)=>
+(b.createdAt?.seconds||0)-
+(a.createdAt?.seconds||0)
+);
+
+box.innerHTML=
+rooms.map(room=>{
+
+const player1=
+room.player1Uid===
+currentUser.uid;
+
+const myTeam=
+player1
+?room.player1Team
+:room.player2Team;
+
+let result="";
+
+if(room.winningTeam){
+
+if(
+room.winningTeam===
+myTeam
+){
+
+result=`
+<div class="win">
+🎉 Congratulations! You won this H2H!
+</div>
+`;
+
+}else{
+
+result=`
+<div class="loss">
+❌ You didn't win this H2H.
+</div>
+`;
+
+}
+
+}
+
+return`
+
+<div class="room">
+
+<div class="match-head">
+
+<strong>
+${
+room.status==="full"
+?"H2H FULL"
+:"H2H WAITING"
+}
+</strong>
+
+<span class="badge ${
+room.status==="full"
+?"full"
+:"waiting"
+}">
+
+${
+room.status==="full"
+?"2/2"
+:"1/2"
+}
+
+</span>
+
+</div>
+
+<h3>
+₹${money(room.amount)}
+</h3>
+
+<div class="small">
+Display value:
+₹${money(room.prize)}
+</div>
+
+<div class="player-info">
+
+🏏 Your team:
+
+<strong>
+${
+myTeam==="A"
+?"Team A"
+:"Team B"
+}
+</strong>
+
+</div>
+
+<div class="small"
+style="margin-top:8px">
+
+${
+room.status==="full"
+?"👥 H2H room is full."
+:"⏳ Waiting for Player 2..."
+}
+
+</div>
+
+${result}
+
+</div>
+
+`;
+
+}).join("");
+
+}catch(error){
+
+console.error(error);
+
+box.innerHTML=
+'<div class="warning">Could not load your rooms.</div>';
+
+}
+
+}
+
+
+/* =====================================================
+ADMIN MATCHES
+===================================================== */
+
+async function loadAdminMatches(){
+
+const box=
+document.getElementById("adminMatches");
+
+box.innerHTML="Loading...";
+
+try{
+
+await initFirebase();
+
+const {
+collection,
+getDocs
+}=
+window.firestoreFunctions;
+
+const snapshot=
+await getDocs(
+collection(db,"matches")
+);
+
+const matches=[];
+
+snapshot.forEach(item=>{
+
+matches.push({
+
+id:item.id,
+...item.data()
+
+});
+
+});
+
+if(matches.length===0){
+
+box.innerHTML=
+'<div class="empty">No matches found.</div>';
+
+return;
+
+}
+
+matches.sort(
+(a,b)=>
+String(a.date)
+.localeCompare(
+String(b.date)
+)
+);
+
+box.innerHTML=
+matches.map(match=>`
+
+<div class="match-card">
+
+<div class="match-head">
+
+<span class="sport-label">
+
+${
+match.sport==="Football"
+?"⚽ Football"
+:"🏏 Cricket"
+}
+
+</span>
+
+<span class="small">
+${escapeHtml(match.date)}
+</span>
+
+</div>
+
+<div class="teams">
+
+${escapeHtml(match.teamA)}
+
+<br>
+
+<span class="vs">VS</span>
+
+<br>
+
+${escapeHtml(match.teamB)}
+
+</div>
+
+<div class="match-time">
+
+🕐
+${escapeHtml(
+fmtDateTime(
+match.date,
+match.time
+)
+)}
+
+</div>
+
+<div class="admin-match-actions">
+
+<button
+type="button"
+class="btn-blue"
+onclick="viewAdminMatchRooms('${match.id}')">
+
+🚪 View Rooms
+
+</button>
+
+<button
+type="button"
+class="btn-red"
+onclick="deleteMatch('${match.id}')">
+
+🗑️ Delete Match
+
+</button>
+
+</div>
+
+</div>
+
+`).join("");
+
+}catch(error){
+
+console.error(error);
+
+box.innerHTML=
+'<div class="warning">Could not load admin matches.</div>';
+
+}
+
+}
+
+
+/* =====================================================
+ADMIN ROOMS
+===================================================== */
+
+async function loadAdminRooms(){
+
+const box=
+document.getElementById("adminRooms");
+
+box.innerHTML="Loading...";
+
+try{
+
+await initFirebase();
+
+const {
+collection,
+getDocs,
+doc,
+getDoc
+}=
+window.firestoreFunctions;
+
+const [
+roomsSnapshot,
+matchesSnapshot
+]=
+await Promise.all([
+
+getDocs(
+collection(db,"rooms")
+),
+
+getDocs(
+collection(db,"matches")
+)
+
+]);
+
+const matchMap=
+new Map();
+
+matchesSnapshot.forEach(item=>{
+
+matchMap.set(
+item.id,
+{
+id:item.id,
+...item.data()
+}
+);
+
+});
+
+const rows=[];
+
+roomsSnapshot.forEach(item=>{
+
+const room={
+id:item.id,
+...item.data()
+};
+
+const match=
+matchMap.get(
+room.matchId
+);
+
+if(
+match &&
+match.date===todayString()
+){
+
+rows.push({
+room,
+match
+});
+
+}
+
+});
+
+if(rows.length===0){
+
+box.innerHTML=
+'<div class="empty">No rooms for today.</div>';
+
+return;
+
+}
+
+
+/* PLAYER DATA */
+
+const playerIds=
+[
+...new Set(
+rows.flatMap(
+x=>[
+x.room.player1Uid,
+x.room.player2Uid
+].filter(Boolean)
+)
+)
+];
+
+const playerMap=
+new Map();
+
+await Promise.all(
+
+playerIds.map(
+async uid=>{
+
+try{
+
+const snap=
+await getDoc(
+doc(db,"players",uid)
+);
+
+if(snap.exists()){
+
+playerMap.set(
+uid,
+snap.data()
+);
+
+}
+
+}catch(e){
+
+console.error(e);
+
+}
+
+}
+)
+
+);
+
+
+box.innerHTML=
+rows.map(({room,match})=>{
+
+const p1=
+playerMap.get(
+room.player1Uid
+)||{};
+
+const p2=
+playerMap.get(
+room.player2Uid
+)||{};
+
+return`
+
+<div class="admin-room">
+
+<div class="match-head">
+
+<strong>
+
+${escapeHtml(match.teamA)}
+vs
+${escapeHtml(match.teamB)}
+
+</strong>
+
+<span class="badge ${
+room.status==="full"
+?"full"
+:"waiting"
+}">
+
+${
+room.status==="full"
+?"FULL 2/2"
+:"WAITING 1/2"
+}
+
+</span>
+
+</div>
+
+<hr>
+
+<strong>
+H2H ₹${money(room.amount)}
+</strong>
+
+<div class="small">
+Display value:
+₹${money(room.prize)}
+</div>
+
+
+<div class="player-info">
+
+<strong>
+Player 1
+</strong>
+
+<br>
+
+Name:
+${escapeHtml(
+p1.name||"Unknown"
+)}
+
+<br>
+
+Phone:
+${escapeHtml(
+p1.phone||"Unknown"
+)}
+
+<br>
+
+Team:
+${
+room.player1Team==="A"
+?escapeHtml(match.teamA)
+:escapeHtml(match.teamB)
+}
+
+</div>
+
+
+${
+room.status==="full"
+?`
+
+<div class="player-info">
+
+<strong>
+Player 2
+</strong>
+
+<br>
+
+Name:
+${escapeHtml(
+p2.name||"Unknown"
+)}
+
+<br>
+
+Phone:
+${escapeHtml(
+p2.phone||"Unknown"
+)}
+
+<br>
+
+Team:
+${
+room.player2Team==="A"
+?escapeHtml(match.teamA)
+:escapeHtml(match.teamB)
+}
+
+</div>
+
+`
+:""
+}
+
+
+${
+room.winningTeam
+
+?`
+
+<div class="winner-box">
+
+🏆 Result published:
+
+${
+room.winningTeam==="A"
+?escapeHtml(match.teamA)
+:escapeHtml(match.teamB)
+}
+
+</div>
+
+`
+
+:
+
+room.status==="full"
+
+?`
+
+<div class="publish-box">
+
+<strong>
+Publish Winner
+</strong>
+
+<div class="result-buttons">
+
+<button
+type="button"
+class="btn-green"
+onclick="setWinner('${room.id}','A')">
+
+🏆
+${escapeHtml(match.teamA)}
+
+</button>
+
+<button
+type="button"
+class="btn-green"
+onclick="setWinner('${room.id}','B')">
+
+🏆
+${escapeHtml(match.teamB)}
+
+</button>
+
+</div>
+
+</div>
+
+`
+:""
+
+}
+
+</div>
+
+`;
+
+}).join("");
+
+}catch(error){
+
+console.error(error);
+
+box.innerHTML=
+'<div class="warning">Could not load rooms.</div>';
+
+}
+
+}
+
+
+/* =====================================================
+ADMIN STATS
+===================================================== */
+
+async function loadAdminStats(){
+
+try{
+
+await initFirebase();
+
+const {
+collection,
+getDocs
+}=
+window.firestoreFunctions;
+
+const [
+matchesSnapshot,
+roomsSnapshot
+]=
+await Promise.all([
+
+getDocs(
+collection(db,"matches")
+),
+
+getDocs(
+collection(db,"rooms")
+)
+
+]);
+
+let matches=0;
+let waiting=0;
+let full=0;
+
+const players=
+new Set();
+
+matchesSnapshot.forEach(item=>{
+
+const match=
+item.data();
+
+if(
+match.date===
+todayString()
+){
+
+matches++;
+
+}
+
+});
+
+roomsSnapshot.forEach(item=>{
+
+const room=
+item.data();
+
+if(room.status==="waiting")
+waiting++;
+
+if(room.status==="full")
+full++;
+
+if(room.player1Uid)
+players.add(room.player1Uid);
+
+if(room.player2Uid)
+players.add(room.player2Uid);
+
+});
+
+document
+.getElementById("statMatches")
+.textContent=matches;
+
+document
+.getElementById("statPlayers")
+.textContent=players.size;
+
+document
+.getElementById("statWaiting")
+.textContent=waiting;
+
+document
+.getElementById("statFull")
+.textContent=full;
+
+}catch(error){
+
+console.error(error);
+
+}
+
+}
+
+
+/* =====================================================
+VIEW ROOMS
+===================================================== */
+
+async function viewAdminMatchRooms(matchId){
+
+const box=
+document.getElementById("adminRooms");
+
+box.scrollIntoView({
+behavior:"smooth"
+});
+
+await loadAdminRooms();
+
+}
+
+
+/* =====================================================
+SET WINNER
+===================================================== */
+
+async function setWinner(
+roomId,
+winningTeam
+){
+
+const answer=
+confirm(
+"Are you sure you want to publish this winner?"
+);
+
+if(!answer)return;
+
+try{
+
+await initFirebase();
+
+const {
+doc,
+updateDoc,
+serverTimestamp
+}=
+window.firestoreFunctions;
+
+await updateDoc(
+
+doc(
+db,
+"rooms",
+roomId
+),
+
+{
+
+winningTeam:
+winningTeam,
+
+winnerSetAt:
+serverTimestamp(),
+
+winnerSetBy:
+ADMIN_UID,
+
+updatedAt:
+serverTimestamp()
+
+}
+
+);
+
+alert(
+"🏆 Winner published successfully!"
+);
+
+loadAdminRooms();
+
+}catch(error){
+
+console.error(error);
+
+alert(
+"Could not publish winner: "+
+(error.message||error.code)
+);
+
+}
+
+}
+
+
+/* =====================================================
+DELETE MATCH
+===================================================== */
+
+async function deleteMatch(matchId){
+
+const answer=
+confirm(
+"Delete this match and all H2H rooms belonging to it?"
+);
+
+if(!answer)return;
+
+try{
+
+await initFirebase();
+
+const {
+collection,
+query,
+where,
+getDocs,
+doc,
+deleteDoc,
+writeBatch
+}=
+window.firestoreFunctions;
+
+const roomQuery=
+query(
+collection(db,"rooms"),
+where(
+"matchId",
+"==",
+matchId
+)
+);
+
+const rooms=
+await getDocs(roomQuery);
+
+const batch=
+writeBatch(db);
+
+for(
+const room
+of rooms.docs
+){
+
+const members=
+await getDocs(
+collection(
+db,
+"rooms",
+room.id,
+"members"
+)
+);
+
+members.forEach(member=>{
+
+batch.delete(
+member.ref
+);
+
+});
+
+batch.delete(
+room.ref
+);
+
+}
+
+await batch.commit();
+
+await deleteDoc(
+doc(
+db,
+"matches",
+matchId
+)
+);
+
+alert(
+"🗑️ Match and H2H rooms deleted."
+);
+
+loadAdminMatches();
+loadAdminRooms();
+loadAdminStats();
+
+}catch(error){
+
+console.error(error);
+
+alert(
+"Delete failed: "+
+(error.message||error.code)
+);
+
+}
+
+}
+
+
+/* =====================================================
+DELETE OLD ROOMS
+===================================================== */
+
+async function deleteOldRooms(){
+
+const answer=
+confirm(
+"Delete rooms belonging to old or deleted matches?"
+);
+
+if(!answer)return;
+
+try{
+
+await initFirebase();
+
+const {
+collection,
+getDocs,
+doc,
+getDoc,
+writeBatch
+}=
+window.firestoreFunctions;
+
+const rooms=
+await getDocs(
+collection(db,"rooms")
+);
+
+const batch=
+writeBatch(db);
+
+let deleted=0;
+
+for(
+const roomDoc
+of rooms.docs
+){
+
+const room=
+roomDoc.data();
+
+let remove=false;
+
+try{
+
+const match=
+await getDoc(
+doc(
+db,
+"matches",
+room.matchId
+)
+);
+
+if(!match.exists()){
+
+remove=true;
+
+}else if(
+match.data().date!==
+todayString()
+){
+
+remove=true;
+
+}
+
+}catch(e){
+
+console.error(e);
+
+}
+
+if(!remove)continue;
+
+const members=
+await getDocs(
+collection(
+db,
+"rooms",
+roomDoc.id,
+"members"
+)
+);
+
+members.forEach(member=>{
+
+batch.delete(
+member.ref
+);
+
+});
+
+batch.delete(
+roomDoc.ref
+);
+
+deleted++;
+
+}
+
+if(deleted>0){
+
+await batch.commit();
+
+}
+
+alert(
+"🧹 Deleted "+
+deleted+
+" old room(s)."
+);
+
+loadAdminRooms();
+loadAdminStats();
+
+}catch(error){
+
+console.error(error);
+
+alert(
+"Cleanup failed: "+
+(error.message||error.code)
+);
+
+}
+
+}
+
+
+/* =====================================================
+WHATSAPP SUPPORT
+===================================================== */
+
+function contactAdmin(){
+
+const text=
+encodeURIComponent(
+"Hello, I need support with Dream Play."
+);
+
+const url=
+"https://wa.me/"+
+ADMIN_WHATSAPP+
+"?text="+
+text;
+
+window.open(
+url,
+"_blank"
+);
+
+}
+
+
+/* =====================================================
+SHARE DREAM PLAY
+===================================================== */
+
+async function shareDreamPlay(){
+
+const url=
+window.location.href
+.split("#")[0];
+
+try{
+
+if(navigator.share){
+
+await navigator.share({
+
+title:"Dream Play",
+
+text:
+"Join me on Dream Play 🏆",
+
+url:url
+
+});
+
+return;
+
+}
+
+if(navigator.clipboard){
+
+await navigator.clipboard
+.writeText(url);
+
+alert(
+"📤 Dream Play link copied! Paste it into your WhatsApp group."
+);
+
+return;
+
+}
+
+prompt(
+"Copy this Dream Play link:",
+url
+);
+
+}catch(error){
+
+if(
+error.name!=="AbortError"
+){
+
+alert(
+"Could not share the link."
+);
+
+}
+
+}
+
+}
+
+
+/* =====================================================
+ERROR HANDLING
+===================================================== */
+
+window.addEventListener(
+"error",
+function(event){
+
+console.error(
+"Dream Play error:",
+event.error||
+event.message
+);
+
+}
+);
+
+window.addEventListener(
+"unhandledrejection",
+function(event){
+
+console.error(
+"Dream Play rejection:",
+event.reason
+);
+
+}
+);
+
+
+/* =====================================================
+START
+===================================================== */
+
+window.addEventListener(
+"DOMContentLoaded",
+function(){
+
+const dateInput=
+document.getElementById(
+"adminMatchDate"
+);
+
+if(dateInput){
+
+dateInput.value=
+todayString();
+
+}
+
+showLogin();
+
+}
+);
+
+</script>
+
+</body>
+</html>
