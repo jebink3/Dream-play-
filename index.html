@@ -1472,7 +1472,19 @@ console.log(
 "Dream Play FCM token:",
 token
 );
-
+await window.firestoreFunctions.setDoc(
+  window.firestoreFunctions.doc(
+    db,
+    "adminNotificationTokens",
+    token
+  ),
+  {
+    token: token,
+    adminUid: currentUser.uid,
+    updatedAt:
+      window.firestoreFunctions.serverTimestamp()
+  }
+);
 }catch(error){
 
 console.error(
