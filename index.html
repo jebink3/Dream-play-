@@ -1375,9 +1375,18 @@ PLAYER LOGIN
 
 function focusLogin(){
 
-document
-.getElementById("loginName")
-.focus();
+const loginPage=document.getElementById("loginPage");
+const loginName=document.getElementById("loginName");
+
+if(loginPage){
+loginPage.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+setTimeout(function(){
+if(loginName){
+loginName.focus();
+}
+},350);
 
 }
 
@@ -3935,6 +3944,32 @@ event.reason
 
 }
 );
+
+
+/* =====================================================
+INLINE BUTTON SAFETY
+===================================================== */
+
+window.showLogin=showLogin;
+window.showAdminLogin=showAdminLogin;
+window.focusLogin=focusLogin;
+window.playerLogin=playerLogin;
+window.playerLogout=playerLogout;
+window.adminLogin=adminLogin;
+window.adminLogout=adminLogout;
+window.createMatch=createMatch;
+window.openMatch=openMatch;
+window.backToPlayer=backToPlayer;
+window.openJoinModal=openJoinModal;
+window.selectTeam=selectTeam;
+window.closeJoinModal=closeJoinModal;
+window.confirmJoin=confirmJoin;
+window.viewAdminMatchRooms=viewAdminMatchRooms;
+window.setWinner=setWinner;
+window.deleteMatch=deleteMatch;
+window.deleteOldRooms=deleteOldRooms;
+window.contactAdmin=contactAdmin;
+window.shareDreamPlay=shareDreamPlay;
 
 
 /* =====================================================
