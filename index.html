@@ -461,6 +461,38 @@ hr{
   font-size:32px;
 }
 
+.match-status{
+margin:10px 0 18px;
+padding:11px 14px;
+border-radius:12px;
+font-weight:800;
+text-align:center;
+}
+
+.match-status.open{
+background:#ecfdf5;
+color:#047857;
+border:1px solid #a7f3d0;
+}
+
+.match-status.closed{
+background:#fef2f2;
+color:#b91c1c;
+border:1px solid #fecaca;
+}
+
+.match-closed{
+width:100%;
+box-sizing:border-box;
+padding:13px 10px;
+border-radius:12px;
+background:#fef2f2;
+color:#b91c1c;
+border:1px solid #fecaca;
+font-weight:800;
+text-align:center;
+}
+
 .winner-box{
   background:#dcfce7;
   border:2px solid #86efac;
@@ -523,6 +555,183 @@ hr{
     grid-template-columns:1fr;
   }
 }
+
+/* ===== DREAM PLAY PRO THEME ===== */
+:root{
+  --dp-navy:#06111f;
+  --dp-blue:#2563eb;
+  --dp-sky:#38bdf8;
+  --dp-purple:#7c3aed;
+  --dp-text:#0f172a;
+  --dp-muted:#64748b;
+  --dp-line:#e2e8f0;
+}
+body{
+  background:
+    radial-gradient(circle at 8% 4%,rgba(56,189,248,.13),transparent 28%),
+    radial-gradient(circle at 92% 10%,rgba(124,58,237,.10),transparent 30%),
+    #f5f7fb;
+}
+.topbar{
+  background:rgba(6,17,31,.94);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:12px 16px;
+}
+.brand{letter-spacing:.5px;text-shadow:0 3px 18px rgba(56,189,248,.22)}
+.top-actions .btn-dark{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.08);
+  padding:10px 14px;
+  width:auto;
+  margin:0;
+}
+.container{padding:18px 14px 40px}
+.hero{
+  min-height:340px;
+  border:1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(circle at 78% 30%,rgba(56,189,248,.30),transparent 24%),
+    radial-gradient(circle at 15% 90%,rgba(124,58,237,.32),transparent 28%),
+    linear-gradient(135deg,#050b16 0%,#0b1d36 52%,#123a69 100%);
+  box-shadow:0 22px 60px rgba(15,23,42,.24);
+}
+.hero:after{
+  content:"";
+  position:absolute;
+  inset:auto -10% -55% 35%;
+  height:260px;
+  background:rgba(56,189,248,.12);
+  filter:blur(35px);
+  border-radius:50%;
+}
+.hero-copy{padding:34px 22px;max-width:62%}
+.hero h1{font-size:40px;line-height:1.05;letter-spacing:-1px}
+.hero p{font-size:15px}
+.pill{background:rgba(56,189,248,.12);border-color:rgba(125,211,252,.34)}
+.hero .btn-blue{
+  background:linear-gradient(135deg,#3b82f6,#7c3aed);
+  box-shadow:0 10px 25px rgba(37,99,235,.32);
+}
+.hero-photo{z-index:1;width:49%}
+.hero-photo img{filter:drop-shadow(0 18px 30px rgba(0,0,0,.5))}
+.home-intro{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:12px;
+  margin:14px 0;
+}
+.pro-card{
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(226,232,240,.9);
+  box-shadow:0 12px 35px rgba(15,23,42,.07);
+  border-radius:18px;
+  padding:18px;
+}
+.pro-card h3{margin:0 0 6px}
+.pro-card p{margin:0;color:var(--dp-muted);font-size:13px;line-height:1.55}
+.pro-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,#eff6ff,#f5f3ff);
+  color:#4338ca;border:1px solid #dbeafe;
+  border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900;
+}
+.feature-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.feature-mini{padding:14px;border-radius:16px;background:white;border:1px solid var(--dp-line);box-shadow:0 8px 24px rgba(15,23,42,.05)}
+.feature-mini strong{display:block;font-size:13px;margin-bottom:3px}.feature-mini span{font-size:11px;color:var(--dp-muted)}
+.sport-card{position:relative;overflow:hidden;min-height:135px;border:1px solid rgba(255,255,255,.12);box-shadow:0 12px 28px rgba(15,23,42,.12)}
+.sport-card:after{content:"";position:absolute;width:90px;height:90px;right:-25px;bottom:-25px;background:rgba(255,255,255,.10);border-radius:50%}
+.sport-icon{position:relative;z-index:1}.sport-card h3,.sport-card p{position:relative;z-index:1}
+.card{border:1px solid rgba(226,232,240,.9);box-shadow:0 10px 30px rgba(15,23,42,.06)}
+.card h2{letter-spacing:-.3px}
+.btn-blue{background:linear-gradient(135deg,#2563eb,#4f46e5);box-shadow:0 7px 18px rgba(37,99,235,.18)}
+button{transition:transform .15s ease,box-shadow .15s ease,filter .15s ease}
+button:hover{transform:translateY(-1px);filter:brightness(1.03)}
+@media(max-width:650px){
+  .home-intro{grid-template-columns:1fr}
+  .feature-row{grid-template-columns:1fr 1fr 1fr}
+  .hero{min-height:335px}
+  .hero-copy{max-width:72%;padding:25px 17px}
+  .hero h1{font-size:32px}
+}
+@media(max-width:430px){
+  .feature-row{gap:7px}.feature-mini{padding:11px 9px}
+  .feature-mini strong{font-size:11px}.feature-mini span{font-size:10px}
+}
+
+
+/* ===== DREAM PLAY FINAL STADIUM VISUAL ===== */
+.home-intro{display:none !important}
+
+.stadium-hero{
+  min-height:390px;
+  background:
+    radial-gradient(circle at 75% 25%,rgba(0,211,255,.34),transparent 22%),
+    radial-gradient(circle at 18% 90%,rgba(116,42,255,.42),transparent 30%),
+    linear-gradient(135deg,#020b17 0%,#05213b 50%,#063c5e 100%);
+  border:1px solid rgba(56,189,248,.38);
+  box-shadow:0 22px 55px rgba(2,12,27,.34);
+}
+.stadium-hero:before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.65;
+  background:
+    linear-gradient(76deg,transparent 0 48%,rgba(255,255,255,.05) 49%,transparent 50%),
+    linear-gradient(105deg,transparent 0 63%,rgba(255,255,255,.045) 64%,transparent 65%);
+}
+.hero-copy{z-index:5;max-width:58%;padding:34px 20px 28px}
+.hero h1{color:#fff;font-size:38px;letter-spacing:-1px;text-shadow:0 5px 22px rgba(0,0,0,.32)}
+.hero p{color:#c9dced}
+.hero .btn-blue{
+  background:linear-gradient(135deg,#087dff,#4f46e5 58%,#8b2be2);
+  box-shadow:0 12px 30px rgba(37,99,235,.36);
+}
+.hero-tagline{margin-top:20px;color:#8fdcff;font-size:10px;font-weight:900;letter-spacing:3px}
+.hero-photo{z-index:4;right:-1%;bottom:0;width:54%;height:100%;align-items:flex-end;pointer-events:none}
+.hero-photo img{
+  display:block !important;visibility:visible !important;opacity:1 !important;
+  height:108%;width:auto;max-width:100%;object-fit:contain;
+  filter:drop-shadow(0 22px 26px rgba(0,0,0,.62));
+}
+.photo-halo{
+  position:absolute;width:280px;height:280px;right:18%;bottom:4%;
+  border-radius:50%;background:radial-gradient(circle,rgba(20,196,255,.34),transparent 66%);
+  filter:blur(8px);
+}
+.stadium-glow{position:absolute;border-radius:50%;filter:blur(25px);pointer-events:none}
+.glow-one{width:160px;height:160px;right:38%;top:-80px;background:rgba(255,255,255,.12)}
+.glow-two{width:190px;height:190px;left:-90px;bottom:-110px;background:rgba(123,44,255,.32)}
+.stadium-lights{
+  position:absolute;left:0;right:0;bottom:0;height:70px;pointer-events:none;opacity:.5;
+  background:
+    radial-gradient(circle at 12% 20%,rgba(255,255,255,.9) 0 2px,transparent 3px),
+    radial-gradient(circle at 22% 28%,rgba(255,255,255,.75) 0 2px,transparent 3px),
+    radial-gradient(circle at 76% 22%,rgba(255,255,255,.8) 0 2px,transparent 3px),
+    radial-gradient(circle at 88% 30%,rgba(255,255,255,.9) 0 2px,transparent 3px),
+    linear-gradient(180deg,transparent,#03101f);
+}
+.feature-mini{
+  background:linear-gradient(145deg,#06182b,#0a2a47);
+  color:#fff;border:1px solid rgba(56,189,248,.24);
+  box-shadow:0 12px 28px rgba(2,12,27,.14);
+}
+.feature-mini span{color:#9db9cf}
+@media(max-width:650px){
+  .stadium-hero{min-height:390px}
+  .hero-copy{max-width:66%;padding:28px 16px}
+  .hero h1{font-size:34px}
+  .hero-photo{width:57%;right:-7%}
+  .hero-photo img{height:102%}
+  .photo-halo{right:12%;bottom:4%;width:210px;height:210px}
+}
+@media(max-width:430px){
+  .stadium-hero{min-height:370px}
+  .hero-copy{max-width:70%;padding:25px 15px}
+  .hero h1{font-size:31px}
+  .hero-photo{width:56%;right:-9%}
+  .hero-photo img{height:99%}
+  .hero-tagline{font-size:9px;letter-spacing:2px}
+}
+
 </style>
 </head>
 
@@ -550,35 +759,29 @@ onclick="showAdminLogin()">⚙️ Admin</button>
 
 <div id="loginPage">
 
-<div class="hero">
+<div class="hero stadium-hero">
+  <div class="stadium-glow glow-one"></div>
+  <div class="stadium-glow glow-two"></div>
 
-<div class="hero-copy">
+  <div class="hero-copy">
+    <span class="pill">🏏 CRICKET • ⚽ FOOTBALL</span>
+    <h1>Play your H2H.</h1>
+    <p>Choose a match, pick your team and join your private H2H room.</p>
+    <button type="button" class="btn-blue" onclick="focusLogin()">🚀 Enter Dream Play</button>
+    <div class="hero-tagline">PASSION • FAMILY • FUN</div>
+  </div>
 
-<span class="pill">
-🏏 CRICKET • ⚽ FOOTBALL
-</span>
+  <div class="hero-photo">
+    <div class="photo-halo"></div>
+    <img src="sanju.png" alt="Sanju">
+  </div>
 
-<h1>Play your H2H.</h1>
-
-<p>
-Choose a match, pick your team and join a private family H2H room.
-</p>
-
-<button
-type="button"
-class="btn-blue"
-onclick="focusLogin()">
-🚀 Enter Dream Play
-</button>
-
+  <div class="stadium-lights"></div>
 </div>
-
-<div class="hero-photo">
-<img src="sanju.png"
-alt="Dream Play"
-onerror="this.style.display='none'">
-</div>
-
+<div class="feature-row">
+  <div class="feature-mini"><strong>⚡ Live Rooms</strong><span>Instant H2H updates</span></div>
+  <div class="feature-mini"><strong>💬 Live Chat</strong><span>Private admin contact</span></div>
+  <div class="feature-mini"><strong>🏆 Results</strong><span>Winner updates</span></div>
 </div>
 
 <div class="sports">
@@ -714,7 +917,7 @@ Pick your side. Join your H2H. Follow the result.
 <div class="hero-photo">
 <img src="sanju.png"
 alt="Dream Play"
-onerror="this.style.display='none'">
+>
 </div>
 
 </div>
@@ -2021,6 +2224,17 @@ selectedMatch.date,
 selectedMatch.time
 );
 
+const oldMatchStatus=document.getElementById("matchStatusBox");
+if(oldMatchStatus)oldMatchStatus.remove();
+
+const statusBox=document.getElementById("detailTime");
+if(statusBox){
+statusBox.insertAdjacentHTML(
+"afterend",
+`<div id="matchStatusBox" class="match-status ${matchHasStarted(selectedMatch)?"closed":"open"}">${matchStatusText(selectedMatch)}</div>`
+);
+}
+
 document
 .getElementById("detailTeamA")
 .textContent=
@@ -2056,6 +2270,29 @@ showPlayerPage();
 }
 
 
+function matchHasStarted(match){
+
+if(!match || !match.date)return false;
+
+const start=new Date(
+match.date+"T"+(match.time||"00:00")
+);
+
+if(Number.isNaN(start.getTime()))return false;
+
+return Date.now() >= start.getTime();
+
+}
+
+function matchStatusText(match){
+
+return matchHasStarted(match)
+?"🔒 Match started — H2H joining is closed."
+:"🟢 H2H joining is open.";
+
+}
+
+
 /* =====================================================
 CATEGORIES
 ===================================================== */
@@ -2078,6 +2315,11 @@ CONTESTS.map(c=>`
 Winning value ₹${money(c.prize)}
 </div>
 
+${matchHasStarted(selectedMatch)
+?`
+<div class="match-closed">🔒 Match started — Joining closed</div>
+`
+:`
 <button
 type="button"
 class="btn-blue"
@@ -2086,6 +2328,7 @@ onclick="openJoinModal(${c.amount},${c.prize})">
 Join H2H
 
 </button>
+`}
 
 </div>
 
@@ -2166,6 +2409,13 @@ async function openJoinModal(
 amount,
 prize
 ){
+
+if(selectedMatch && matchHasStarted(selectedMatch)){
+
+alert("🔒 This match has already started. H2H joining is closed.");
+return;
+
+}
 
 if(!currentUser){
 
@@ -2383,6 +2633,14 @@ return;
 if(!selectedMatch){
 
 alert("Please select a match.");
+
+return;
+
+}
+
+if(matchHasStarted(selectedMatch)){
+
+alert("🔒 This match has already started. H2H joining is closed.");
 
 return;
 
