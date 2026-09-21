@@ -1965,7 +1965,9 @@ currentUser=
 credential.user;
 
 showAdminPage();
-await enableAdminNotifications();
+enableAdminNotifications().catch(err => {
+  console.error("FCM notification setup failed:", err);
+});
 }catch(error){
 
 console.error(error);
