@@ -1971,12 +1971,14 @@ throw new Error(
 currentUser=
 credential.user;
 
+alert("FCM TEST: Admin login code is updated");
+
 showAdminPage();
+
 enableAdminNotifications().catch(err => {
   console.error("FCM notification setup failed:", err);
   alert("FCM ERROR: " + (err.message || err));
 });
-}catch(error){
 
 console.error(error);
 
