@@ -345,24 +345,13 @@ input,select{
   color:white;
 }
 
-.team-btn.disabled-team{
-  opacity:.35;
-  filter:grayscale(1);
-  cursor:not-allowed;
-  pointer-events:none;
-  transform:none !important;
-}
-
-.team-btn.available-team{
-  opacity:1;
-  cursor:pointer;
-  box-shadow:0 0 0 2px rgba(34,197,94,.35);
-}
-
 .team-btn.selected{
   background:#16a34a;
 }
 
+.team-btn.disabled-team{
+  opacity:.35;
+}
 
 .modal{
   position:fixed;
@@ -951,20 +940,20 @@ alt="Dream Play"
 
 <div class="card">
 
-<h2>🔥 Today's Matches</h2>
+<h2>🏠 My H2H Rooms</h2>
 
-<div id="playerMatches">
-Loading matches...
+<div id="myRooms">
+Loading...
 </div>
 
 </div>
 
 <div class="card">
 
-<h2>🏠 My H2H Rooms</h2>
+<h2>🔥 Today's Matches</h2>
 
-<div id="myRooms">
-Loading...
+<div id="playerMatches">
+Loading matches...
 </div>
 
 </div>
@@ -2583,12 +2572,10 @@ await findWaitingRoom(amount);
 
 if(waitingRoom){
 
-updateTeamButtons();
-
 document
 .getElementById("joinRoomInfo")
 .textContent=
-"⚔️ One team is already taken in this room. Choose the other team.";
+"A player is already waiting. Choose the opposite team.";
 
 }else{
 
@@ -2613,73 +2600,39 @@ document
 }
 
 
-function updateTeamButtons(){
-
-const teamAButton=document.getElementById("teamAButton");
-const teamBButton=document.getElementById("teamBButton");
-
-if(!teamAButton||!teamBButton||!selectedMatch)return;
-
-const teamAName=selectedMatch.teamA;
-const teamBName=selectedMatch.teamB;
-
-teamAButton.disabled=false;
-teamBButton.disabled=false;
-
-teamAButton.classList.remove("disabled-team","available-team","selected");
-teamBButton.classList.remove("disabled-team","available-team","selected");
-
-teamAButton.textContent=teamAName+" • SELECT";
-teamBButton.textContent=teamBName+" • SELECT";
-
-if(waitingRoom){
-
-if(waitingRoom.player1Team==="A"){
-teamAButton.disabled=true;
-teamAButton.classList.add("disabled-team");
-teamAButton.textContent=teamAName+" • ALREADY SELECTED";
-teamAButton.title=teamAName+" is already selected in this contest";
-teamBButton.classList.add("available-team");
-}else if(waitingRoom.player1Team==="B"){
-teamBButton.disabled=true;
-teamBButton.classList.add("disabled-team");
-teamBButton.textContent=teamBName+" • ALREADY SELECTED";
-teamBButton.title=teamBName+" is already selected in this contest";
-teamAButton.classList.add("available-team");
-}
-
-}
-
-}
-
-
 function selectTeam(team){
-
-if(waitingRoom && waitingRoom.player1Team===team){
-
-return;
-
-}
 
 selectedTeam=team;
 
-const teamAButton=document.getElementById("teamAButton");
-const teamBButton=document.getElementById("teamBButton");
+document
+.getElementById("teamAButton")
+.classList.toggle(
+"selected",
+team==="A"
+);
 
-teamAButton.classList.toggle("selected",team==="A");
-teamBButton.classList.toggle("selected",team==="B");
+document
+.getElementById("teamBButton")
+.classList.toggle(
+"selected",
+team==="B"
+);
 
 if(waitingRoom){
 
-if(waitingRoom.player1Team==="A"){
-teamAButton.classList.add("disabled-team");
-teamAButton.classList.remove("selected");
-teamBButton.classList.add("available-team");
-}else if(waitingRoom.player1Team==="B"){
-teamBButton.classList.add("disabled-team");
-teamBButton.classList.remove("selected");
-teamAButton.classList.add("available-team");
-}
+document
+.getElementById("teamAButton")
+.classList.toggle(
+"disabled-team",
+waitingRoom.player1Team==="A"
+);
+
+document
+.getElementById("teamBButton")
+.classList.toggle(
+"disabled-team",
+waitingRoom.player1Team==="B"
+);
 
 }
 
@@ -3149,6 +3102,25 @@ window.firestoreFunctions;
 const c=
 collection(db,"rooms");
 
+const matchSnapshot=
+await getDocs(
+collection(db,"matches")
+);
+
+const matchMap=new Map();
+
+matchSnapshot.forEach(item=>{
+
+matchMap.set(
+item.id,
+{
+id:item.id,
+...item.data()
+}
+);
+
+});
+
 const q1=
 query(
 c,
@@ -3230,10 +3202,18 @@ const player1=
 room.player1Uid===
 currentUser.uid;
 
-const myTeam=
+const myTeamCode=
 player1
 ?room.player1Team
 :room.player2Team;
+
+const matchInfo=
+matchMap.get(room.matchId);
+
+const myTeam=
+myTeamCode==="A"
+?(matchInfo?.teamA||"Team A")
+:(matchInfo?.teamB||"Team B");
 
 let result="";
 
@@ -3241,7 +3221,7 @@ if(room.winningTeam){
 
 if(
 room.winningTeam===
-myTeam
+myTeamCode
 ){
 
 result=`
@@ -3306,11 +3286,7 @@ Display value:
 🏏 Your team:
 
 <strong>
-${
-myTeam==="A"
-?"Team A"
-:"Team B"
-}
+${escapeHtml(myTeam)}
 </strong>
 
 </div>
