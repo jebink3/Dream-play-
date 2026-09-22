@@ -1,0 +1,30 @@
+name: Dream Play Notifications
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notifications:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Dream Play
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Firebase Admin SDK
+        run: npm install firebase-admin
+
+      - name: Run Dream Play notification checker
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node notifications/dream-play-notifications.js
