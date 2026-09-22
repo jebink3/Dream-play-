@@ -1452,13 +1452,20 @@ return;
 
 }
 
-const token=
-await window.firebaseFunctions.getToken(
-messaging,
-{
-vapidKey:FCM_VAPID_KEY
-}
-);
+const serviceWorkerRegistration =
+  await navigator.serviceWorker.register(
+    "/Dream-play-/firebase-messaging-sw.js"
+  );
+
+const token =
+  await window.firebaseFunctions.getToken(
+    messaging,
+    {
+      vapidKey: FCM_VAPID_KEY,
+      serviceWorkerRegistration:
+        serviceWorkerRegistration
+    }
+  );
 
 if(!token){
 
