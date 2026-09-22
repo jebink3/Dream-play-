@@ -1415,6 +1415,9 @@ authModule.createUserWithEmailAndPassword,
 signOut:
 authModule.signOut,
 
+onAuthStateChanged:
+authModule.onAuthStateChanged,
+
 getToken:
 messagingModule.getToken
 
@@ -4532,8 +4535,141 @@ window.sendChatMessage=sendChatMessage;
 
 
 /* =====================================================
-START
+SESSION RESTORE + START
 ===================================================== */
+
+async function restoreDreamPlaySession(){
+
+try{
+
+await initFirebase();
+
+const {
+onAuthStateChanged
+}=
+window.firebaseFunctions;
+
+await new Promise((resolve)=>{
+
+let finished=false;
+
+const finish=()=>{
+if(finished)return;
+finished=true;
+resolve();
+};
+
+const unsubscribe=
+onAuthStateChanged(
+auth,
+async (user)=>{
+
+if(!user){
+
+currentUser=null;
+currentPlayer=null;
+showLogin();
+finish();
+return;
+
+}
+
+currentUser=user;
+
+if(user.uid===ADMIN_UID){
+
+showAdminPage();
+
+enableAdminNotifications().catch(err=>{
+console.error(
+"FCM notification setup failed:",
+err
+);
+});
+
+finish();
+return;
+
+}
+
+try{
+
+const {
+doc,
+getDoc
+}=
+window.firestoreFunctions;
+
+const playerSnap=
+await getDoc(
+doc(
+db,
+"players",
+user.uid
+)
+);
+
+if(
+!playerSnap.exists()
+){
+
+await window.firebaseFunctions.signOut(auth);
+
+currentUser=null;
+currentPlayer=null;
+showLogin();
+finish();
+return;
+
+}
+
+const playerData=
+playerSnap.data();
+
+currentPlayer={
+uid:user.uid,
+name:playerData.name||"",
+phone:playerData.phone||""
+};
+
+showPlayerPage();
+
+}catch(error){
+
+console.error(
+"Could not restore player session:",
+error
+);
+
+await window.firebaseFunctions.signOut(auth);
+
+currentUser=null;
+currentPlayer=null;
+showLogin();
+
+}
+
+finish();
+
+}
+);
+
+});
+
+}catch(error){
+
+console.error(
+"Session restore failed:",
+error
+);
+
+currentUser=null;
+currentPlayer=null;
+showLogin();
+
+}
+
+}
 
 window.addEventListener(
 "DOMContentLoaded",
@@ -4551,7 +4687,7 @@ todayString();
 
 }
 
-showLogin();
+restoreDreamPlaySession();
 
 }
 );
