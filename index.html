@@ -1974,6 +1974,7 @@ credential.user;
 showAdminPage();
 enableAdminNotifications().catch(err => {
   console.error("FCM notification setup failed:", err);
+  alert("FCM ERROR: " + (err.message || err));
 });
 }catch(error){
 
