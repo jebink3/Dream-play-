@@ -244,7 +244,53 @@ async function main() {
     const chatsSnapshot = await db
       .collection("chats")
       .get();
+    // First chat-notification run:
+    // mark existing messages as already seen.
+    const baselineRef = db
+      .collection("notificationState")
+      .doc("chatBaseline");
 
+    const baselineSnapshot = await baselineRef.get();
+
+    if (!baselineSnapshot.exists) {
+
+      console.log("🛡️ Creating chat notification baseline...");
+
+      for (const chatDoc of chatsSnapshot.docs) {
+
+        const existingMessages = await db
+          .collection("chats")
+          .doc(chatDoc.id)
+          .collection("messages")
+          .get();
+
+        for (const messageDoc of existingMessages.docs) {
+
+          const eventRef = db
+            .collection("notificationEvents")
+            .doc(`chat_player_${messageDoc.id}`);
+
+          await eventRef.set({
+            type: "chat_baseline",
+            chatId: chatDoc.id,
+            messageId: messageDoc.id,
+            createdAt:
+              admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      }
+
+      await baselineRef.set({
+        createdAt:
+          admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      console.log(
+        "✅ Chat baseline created. Old messages will not notify."
+      );
+
+      return;
+    }
     console.log(
       `💬 Chat conversations found: ${chatsSnapshot.size}`
     );
