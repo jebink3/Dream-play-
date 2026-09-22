@@ -1,5 +1,7 @@
 const admin = require("firebase-admin");
 
+const ADMIN_UID = "6EsKceYMINh1Hiq9LRDH637HhlL2";
+
 async function main() {
   console.log("🚀 Dream Play notification checker started");
 
@@ -18,168 +20,453 @@ async function main() {
   const db = admin.firestore();
   const messaging = admin.messaging();
 
-  // Get all admin notification tokens
+  // =========================================================
+  // 1. GET ADMIN NOTIFICATION TOKENS
+  // =========================================================
+
   const tokenSnapshot = await db
     .collection("adminNotificationTokens")
     .get();
 
-  const tokens = [];
+  const adminTokens = [];
 
   tokenSnapshot.forEach((doc) => {
     const data = doc.data();
 
     if (data.token) {
-      tokens.push({
+      adminTokens.push({
         id: doc.id,
         token: data.token
       });
     }
   });
 
-  console.log(`📱 Admin notification tokens found: ${tokens.length}`);
+  console.log(
+    `📱 Admin notification tokens found: ${adminTokens.length}`
+  );
 
-  if (tokens.length === 0) {
-    console.log("⚠️ No admin notification tokens found.");
-    return;
-  }
+  // =========================================================
+  // 2. H2H FULL NOTIFICATIONS
+  // =========================================================
 
-  // Find all H2H rooms that are full
-  const roomsSnapshot = await db
-    .collection("rooms")
-    .where("status", "==", "full")
-    .get();
+  if (adminTokens.length > 0) {
 
-  console.log(`🏠 Full rooms found: ${roomsSnapshot.size}`);
+    const roomsSnapshot = await db
+      .collection("rooms")
+      .where("status", "==", "full")
+      .get();
 
-  let newNotifications = 0;
+    console.log(`🏠 Full rooms found: ${roomsSnapshot.size}`);
 
-  for (const roomDoc of roomsSnapshot.docs) {
-    const room = roomDoc.data();
-    const roomId = roomDoc.id;
+    let newH2HNotifications = 0;
 
-    // Unique event ID prevents duplicate notifications
-    const eventId = `h2h_full_${roomId}`;
+    for (const roomDoc of roomsSnapshot.docs) {
 
-    const eventRef = db
-      .collection("notificationEvents")
-      .doc(eventId);
+      const room = roomDoc.data();
+      const roomId = roomDoc.id;
 
-    // Check whether this room was already notified
-    const eventSnapshot = await eventRef.get();
+      const eventId = `h2h_full_${roomId}`;
 
-    if (eventSnapshot.exists) {
-      continue;
-    }
+      const eventRef = db
+        .collection("notificationEvents")
+        .doc(eventId);
 
-    // Get match information
-    let teamA = "Team A";
-    let teamB = "Team B";
+      const eventSnapshot = await eventRef.get();
 
-    if (room.matchId) {
-      const matchDoc = await db
-        .collection("matches")
-        .doc(room.matchId)
-        .get();
-
-      if (matchDoc.exists) {
-        const match = matchDoc.data();
-
-        teamA = match.teamA || "Team A";
-        teamB = match.teamB || "Team B";
+      if (eventSnapshot.exists) {
+        continue;
       }
-    }
 
-    const amount = room.amount || 0;
+      let teamA = "Team A";
+      let teamB = "Team B";
 
-    const title = "🔔 Dream Play — H2H FULL";
+      if (room.matchId) {
 
-    const body =
-      `${teamA} vs ${teamB} • ₹${amount} contest is FULL (2/2)`;
+        const matchDoc = await db
+          .collection("matches")
+          .doc(room.matchId)
+          .get();
 
-    console.log(`📢 Sending notification: ${body}`);
+        if (matchDoc.exists) {
 
-    const message = {
-      tokens: tokens.map((item) => item.token),
+          const match = matchDoc.data();
 
-      notification: {
-        title: title,
-        body: body
-      },
-
-      webpush: {
-        notification: {
-          title: title,
-          body: body,
-          icon: "https://jebink3.github.io/Dream-play-/sanju.png"
+          teamA = match.teamA || "Team A";
+          teamB = match.teamB || "Team B";
         }
-      },
-
-      data: {
-        type: "h2h_full",
-        roomId: roomId,
-        matchId: room.matchId || "",
-        amount: String(amount)
       }
-    };
 
-    try {
-      const response = await messaging.sendEachForMulticast(message);
+      const amount = room.amount || 0;
+
+      const title = "🔔 Dream Play — H2H FULL";
+
+      const body =
+        `${teamA} vs ${teamB} • ₹${amount} contest is FULL (2/2)`;
 
       console.log(
-        `✅ Notification sent. Success: ${response.successCount}, Failed: ${response.failureCount}`
+        `📢 Sending H2H notification: ${body}`
       );
 
-      // Remove invalid/expired FCM tokens
-      for (let i = 0; i < response.responses.length; i++) {
-        const result = response.responses[i];
+      const message = {
 
-        if (!result.success) {
-          const errorCode = result.error?.code || "";
+        tokens: adminTokens.map(
+          (item) => item.token
+        ),
 
-          if (
-            errorCode.includes("registration-token-not-registered") ||
-            errorCode.includes("invalid-registration-token")
-          ) {
-            const tokenId = tokens[i].id;
+        notification: {
+          title: title,
+          body: body
+        },
 
-            await db
-              .collection("adminNotificationTokens")
-              .doc(tokenId)
-              .delete();
+        webpush: {
 
-            console.log(`🗑️ Removed invalid token: ${tokenId}`);
+          notification: {
+            title: title,
+            body: body,
+            icon:
+              "https://jebink3.github.io/Dream-play-/sanju.png"
+          }
+
+        },
+
+        data: {
+          type: "h2h_full",
+          roomId: roomId,
+          matchId: room.matchId || "",
+          amount: String(amount)
+        }
+
+      };
+
+      try {
+
+        const response =
+          await messaging.sendEachForMulticast(message);
+
+        console.log(
+          `✅ H2H notification sent. Success: ${response.successCount}, Failed: ${response.failureCount}`
+        );
+
+        // Remove invalid tokens
+        for (
+          let i = 0;
+          i < response.responses.length;
+          i++
+        ) {
+
+          const result =
+            response.responses[i];
+
+          if (!result.success) {
+
+            const errorCode =
+              result.error?.code || "";
+
+            if (
+              errorCode.includes(
+                "registration-token-not-registered"
+              ) ||
+              errorCode.includes(
+                "invalid-registration-token"
+              )
+            ) {
+
+              const tokenId =
+                adminTokens[i].id;
+
+              await db
+                .collection(
+                  "adminNotificationTokens"
+                )
+                .doc(tokenId)
+                .delete();
+
+              console.log(
+                `🗑️ Removed invalid admin token: ${tokenId}`
+              );
+            }
           }
         }
+
+        await eventRef.create({
+
+          type: "h2h_full",
+
+          roomId: roomId,
+
+          matchId: room.matchId || "",
+
+          amount: amount,
+
+          teamA: teamA,
+
+          teamB: teamB,
+
+          sentAt:
+            admin.firestore.FieldValue
+              .serverTimestamp()
+
+        });
+
+        newH2HNotifications++;
+
+      } catch (error) {
+
+        console.error(
+          `❌ H2H notification failed for room ${roomId}:`,
+          error.message
+        );
+
       }
 
-      // Mark this room as notified
-      await eventRef.create({
-        type: "h2h_full",
-        roomId: roomId,
-        matchId: room.matchId || "",
-        amount: amount,
-        teamA: teamA,
-        teamB: teamB,
-        sentAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-
-      newNotifications++;
-
-    } catch (error) {
-      console.error(
-        `❌ Notification failed for room ${roomId}:`,
-        error.message
-      );
     }
+
+    console.log(
+      `🎯 New H2H notifications sent: ${newH2HNotifications}`
+    );
+
+  } else {
+
+    console.log(
+      "⚠️ No admin notification tokens available for H2H notifications."
+    );
+
+  }
+
+  // =========================================================
+  // 3. PLAYER → ADMIN CHAT NOTIFICATIONS
+  // =========================================================
+
+  if (adminTokens.length > 0) {
+
+    console.log("💬 Checking player chat messages...");
+
+    const chatsSnapshot = await db
+      .collection("chats")
+      .get();
+
+    console.log(
+      `💬 Chat conversations found: ${chatsSnapshot.size}`
+    );
+
+    let newChatNotifications = 0;
+
+    for (const chatDoc of chatsSnapshot.docs) {
+
+      const chatId = chatDoc.id;
+
+      // Current Dream Play private chat format:
+      // admin_PLAYER_UID
+      if (!chatId.startsWith("admin_")) {
+        continue;
+      }
+
+      const messagesSnapshot = await db
+        .collection("chats")
+        .doc(chatId)
+        .collection("messages")
+        .get();
+
+      for (
+        const messageDoc of messagesSnapshot.docs
+      ) {
+
+        const message = messageDoc.data();
+
+        // Ignore Admin → Player messages here.
+        if (
+          !message.senderUid ||
+          message.senderUid === ADMIN_UID
+        ) {
+          continue;
+        }
+
+        const messageId = messageDoc.id;
+
+        const eventId =
+          `chat_player_${messageId}`;
+
+        const eventRef = db
+          .collection("notificationEvents")
+          .doc(eventId);
+
+        const eventSnapshot =
+          await eventRef.get();
+
+        // Already notified
+        if (eventSnapshot.exists) {
+          continue;
+        }
+
+        const playerName =
+          message.senderName || "Player";
+
+        const text =
+          String(message.text || "").trim();
+
+        if (!text) {
+          continue;
+        }
+
+        // Keep notification body short
+        const shortText =
+          text.length > 120
+            ? text.substring(0, 117) + "..."
+            : text;
+
+        const title =
+          "💬 Dream Play — New Message";
+
+        const body =
+          `${playerName}: ${shortText}`;
+
+        console.log(
+          `📢 Sending chat notification: ${body}`
+        );
+
+        const chatMessage = {
+
+          tokens: adminTokens.map(
+            (item) => item.token
+          ),
+
+          notification: {
+            title: title,
+            body: body
+          },
+
+          webpush: {
+
+            notification: {
+              title: title,
+              body: body,
+              icon:
+                "https://jebink3.github.io/Dream-play-/sanju.png"
+            }
+
+          },
+
+          data: {
+            type: "chat_message",
+            chatId: chatId,
+            messageId: messageId
+          }
+
+        };
+
+        try {
+
+          const response =
+            await messaging.sendEachForMulticast(
+              chatMessage
+            );
+
+          console.log(
+            `✅ Chat notification sent. Success: ${response.successCount}, Failed: ${response.failureCount}`
+          );
+
+          // Remove invalid admin tokens
+          for (
+            let i = 0;
+            i < response.responses.length;
+            i++
+          ) {
+
+            const result =
+              response.responses[i];
+
+            if (!result.success) {
+
+              const errorCode =
+                result.error?.code || "";
+
+              if (
+                errorCode.includes(
+                  "registration-token-not-registered"
+                ) ||
+                errorCode.includes(
+                  "invalid-registration-token"
+                )
+              ) {
+
+                const tokenId =
+                  adminTokens[i].id;
+
+                await db
+                  .collection(
+                    "adminNotificationTokens"
+                  )
+                  .doc(tokenId)
+                  .delete();
+
+                console.log(
+                  `🗑️ Removed invalid admin token: ${tokenId}`
+                );
+              }
+            }
+          }
+
+          // Mark this chat message as notified
+          await eventRef.create({
+
+            type: "chat_message",
+
+            chatId: chatId,
+
+            messageId: messageId,
+
+            senderUid:
+              message.senderUid,
+
+            senderName:
+              playerName,
+
+            sentAt:
+              admin.firestore.FieldValue
+                .serverTimestamp()
+
+          });
+
+          newChatNotifications++;
+
+        } catch (error) {
+
+          console.error(
+            `❌ Chat notification failed for message ${messageId}:`,
+            error.message
+          );
+
+        }
+
+      }
+
+    }
+
+    console.log(
+      `💬 New player chat notifications sent: ${newChatNotifications}`
+    );
+
+  } else {
+
+    console.log(
+      "⚠️ No admin tokens available for chat notifications."
+    );
+
   }
 
   console.log(
-    `🎯 Finished. New notifications sent: ${newNotifications}`
+    "🏁 Dream Play notification checker finished."
   );
 }
 
 main().catch((error) => {
-  console.error("❌ Dream Play notification checker failed:");
+
+  console.error(
+    "❌ Dream Play notification checker failed:"
+  );
+
   console.error(error);
+
   process.exit(1);
+
 });
