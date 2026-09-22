@@ -1973,10 +1973,12 @@ credential.user;
 
 showAdminPage();
 
-await enableAdminNotifications();
+enableAdminNotifications().catch(err => {
+  console.error("FCM notification setup failed:", err);
+});
 
 console.error(error);
-
+  
 message.textContent=
 "Admin login failed: "+
 (error.message||
