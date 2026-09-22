@@ -1439,72 +1439,82 @@ const FCM_VAPID_KEY =
 async function enableAdminNotifications(){
 
 if(!currentUser)return;
-
 if(currentUser.uid!==ADMIN_UID)return;
 
 try{
 
-const permission=
-await Notification.requestPermission();
+if(!('Notification' in window)){
+throw new Error("This browser does not support web notifications.");
+}
+
+let permission=Notification.permission;
 
 if(permission!=="granted"){
-
-console.log("Notification permission not granted.");
-
-return;
-
+permission=await Notification.requestPermission();
 }
 
-const serviceWorkerRegistration =
-  await navigator.serviceWorker.register(
-    "/Dream-play-/firebase-messaging-sw.js"
-  );
+if(permission!=="granted"){
+throw new Error("Notification permission is not granted. Browser permission is: "+permission);
+}
 
-const token =
-  await window.firebaseFunctions.getToken(
-    messaging,
-    {
-      vapidKey: FCM_VAPID_KEY,
-      serviceWorkerRegistration:
-        serviceWorkerRegistration
-    }
-  );
+if(!('serviceWorker' in navigator)){
+throw new Error("Service Worker is not available in this browser.");
+}
+
+const swUrl="/Dream-play-/firebase-messaging-sw.js";
+const serviceWorkerRegistration=
+await navigator.serviceWorker.register(swUrl);
+
+console.log("Dream Play service worker registered:",serviceWorkerRegistration.scope);
+
+const token=await window.firebaseFunctions.getToken(
+ messaging,
+ {
+  vapidKey:FCM_VAPID_KEY,
+  serviceWorkerRegistration:serviceWorkerRegistration
+ }
+);
 
 if(!token){
-
-console.log("FCM token not received.");
-
-return;
-
+throw new Error("FCM did not return a registration token.");
 }
 
-console.log(
-"Dream Play FCM token:",
-token
+console.log("Dream Play FCM token received.",token);
+
+const {
+ doc,
+ setDoc,
+ serverTimestamp
+}=window.firestoreFunctions;
+
+await setDoc(
+ doc(db,"adminNotificationTokens",token),
+ {
+  token:token,
+  adminUid:currentUser.uid,
+  platform:"web",
+  updatedAt:serverTimestamp()
+ }
 );
-await window.firestoreFunctions.setDoc(
-  window.firestoreFunctions.doc(
-    db,
-    "adminNotificationTokens",
-    token
-  ),
-  {
-    token: token,
-    adminUid: currentUser.uid,
-    updatedAt:
-      window.firestoreFunctions.serverTimestamp()
-  }
-);
+
+console.log("Dream Play FCM token saved to Firestore.");
+
 }catch(error){
 
-console.error(
-"FCM notification setup failed:",
-error
+console.error("Dream Play FCM setup failed:",error);
+
+const code=error?.code||"no-code";
+const message=error?.message||String(error);
+
+alert(
+"🔔 Dream Play notification setup failed.\n\nCode: "+code+
+"\n\n"+message+
+"\n\nPlease send me a screenshot of this message."
 );
 
 }
 
-  }
+}
 
 /* =====================================================
 HELPERS
