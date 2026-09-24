@@ -1392,8 +1392,6 @@ authModule.createUserWithEmailAndPassword,
 signOut:
 authModule.signOut,
 
-getToken:
-messagingModule.getToken
 
 };
 
@@ -1666,8 +1664,7 @@ await initFirebase();
 
 const {
 signInWithEmailAndPassword,
-createUserWithEmailAndPassword,
-signOut
+createUserWithEmailAndPassword
 }=
 window.firebaseFunctions;
 
@@ -2431,8 +2428,12 @@ document
 .getElementById("teamBButton")
 .classList.remove(
 "selected",
-"disabled-team"
+"disabled-team",
+"available-team"
 );
+
+document.getElementById("teamAButton").disabled=false;
+document.getElementById("teamBButton").disabled=false;
 
 document
 .getElementById("joinRoomInfo")
@@ -2452,12 +2453,16 @@ await findWaitingRoom(amount);
 
 if(waitingRoom){
 
+updateTeamButtons();
+
 document
 .getElementById("joinRoomInfo")
 .textContent=
-"A player is already waiting. Choose the opposite team.";
+"🔒 One team is already selected. The grey team cannot be clicked. Choose the other team.";
 
 }else{
+
+updateTeamButtons();
 
 document
 .getElementById("joinRoomInfo")
@@ -2480,44 +2485,75 @@ document
 }
 
 
-function selectTeam(team){
+function updateTeamButtons(){
 
-selectedTeam=team;
+const teamAButton=document.getElementById("teamAButton");
+const teamBButton=document.getElementById("teamBButton");
 
-document
-.getElementById("teamAButton")
-.classList.toggle(
-"selected",
-team==="A"
-);
+if(!teamAButton||!teamBButton||!selectedMatch)return;
 
-document
-.getElementById("teamBButton")
-.classList.toggle(
-"selected",
-team==="B"
-);
+teamAButton.disabled=false;
+teamBButton.disabled=false;
+
+teamAButton.classList.remove("disabled-team","available-team","selected");
+teamBButton.classList.remove("disabled-team","available-team","selected");
+
+teamAButton.textContent=selectedMatch.teamA+" • SELECT";
+teamBButton.textContent=selectedMatch.teamB+" • SELECT";
 
 if(waitingRoom){
 
-document
-.getElementById("teamAButton")
-.classList.toggle(
-"disabled-team",
-waitingRoom.player1Team==="A"
-);
-
-document
-.getElementById("teamBButton")
-.classList.toggle(
-"disabled-team",
-waitingRoom.player1Team==="B"
-);
-
+if(waitingRoom.player1Team==="A"){
+teamAButton.disabled=true;
+teamAButton.classList.add("disabled-team");
+teamAButton.textContent=selectedMatch.teamA+" • ALREADY SELECTED 🔒";
+teamAButton.title=selectedMatch.teamA+" is already selected in this room";
+teamBButton.classList.add("available-team");
+}else if(waitingRoom.player1Team==="B"){
+teamBButton.disabled=true;
+teamBButton.classList.add("disabled-team");
+teamBButton.textContent=selectedMatch.teamB+" • ALREADY SELECTED 🔒";
+teamBButton.title=selectedMatch.teamB+" is already selected in this room";
+teamAButton.classList.add("available-team");
 }
 
 }
 
+}
+
+function selectTeam(team){
+
+if(waitingRoom && waitingRoom.player1Team===team){
+return;
+}
+
+selectedTeam=team;
+
+const teamAButton=document.getElementById("teamAButton");
+const teamBButton=document.getElementById("teamBButton");
+
+teamAButton.classList.toggle("selected",team==="A");
+teamBButton.classList.toggle("selected",team==="B");
+
+if(waitingRoom){
+
+if(waitingRoom.player1Team==="A"){
+teamAButton.disabled=true;
+teamAButton.classList.add("disabled-team");
+teamAButton.classList.remove("selected");
+teamBButton.disabled=false;
+teamBButton.classList.add("available-team");
+}else if(waitingRoom.player1Team==="B"){
+teamBButton.disabled=true;
+teamBButton.classList.add("disabled-team");
+teamBButton.classList.remove("selected");
+teamAButton.disabled=false;
+teamAButton.classList.add("available-team");
+}
+
+}
+
+}
 
 function closeJoinModal(){
 
