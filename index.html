@@ -1340,7 +1340,10 @@ createUserWithEmailAndPassword:
 authModule.createUserWithEmailAndPassword,
 
 signOut:
-authModule.signOut
+authModule.signOut,
+
+onAuthStateChanged:
+authModule.onAuthStateChanged
 
 };
 
@@ -1402,6 +1405,57 @@ function playerPassword(phone){
 return "DP!"+
 normalizePhone(phone)+
 "X9#";
+
+}
+
+/* =====================================================
+PERSIST PLAYER SESSION
+===================================================== */
+
+function savePlayerSession(player){
+
+try{
+
+localStorage.setItem(
+"dreamPlayPlayerSession",
+JSON.stringify(player)
+);
+
+}catch(error){
+
+console.error("Could not save player session:",error);
+
+}
+
+}
+
+function getSavedPlayerSession(){
+
+try{
+
+const raw=localStorage.getItem(
+"dreamPlayPlayerSession"
+);
+
+return raw?JSON.parse(raw):null;
+
+}catch(error){
+
+return null;
+
+}
+
+}
+
+function clearPlayerSession(){
+
+try{
+
+localStorage.removeItem(
+"dreamPlayPlayerSession"
+);
+
+}catch(error){}
 
 }
 
@@ -1676,6 +1730,8 @@ phone:phone
 
 };
 
+savePlayerSession(currentPlayer);
+
 const {
 doc,
 setDoc,
@@ -1744,6 +1800,7 @@ console.error(error);
 currentUser=null;
 currentPlayer=null;
 selectedMatch=null;
+clearPlayerSession();
 
 showLogin();
 
@@ -4111,6 +4168,37 @@ alert(
 
 
 /* =====================================================
+WHATSAPP ADMIN SUPPORT
+===================================================== */
+
+function contactAdmin(){
+
+const message=encodeURIComponent(
+"Hello, I need support with Dream Play."
+);
+
+const url=
+"https://wa.me/"+
+ADMIN_WHATSAPP+
+"?text="+
+message;
+
+try{
+
+window.location.href=url;
+
+}catch(error){
+
+console.error("WhatsApp open failed:",error);
+
+window.open(url,"_blank");
+
+}
+
+}
+
+
+/* =====================================================
 SHARE DREAM PLAY
 ===================================================== */
 
@@ -4227,12 +4315,120 @@ window.setWinner=setWinner;
 window.deleteMatch=deleteMatch;
 window.deleteOldRooms=deleteOldRooms;
 window.contactAdmin=contactAdmin;
+window.restoreDreamPlaySession=restoreDreamPlaySession;
 window.shareDreamPlay=shareDreamPlay;
 
 
 /* =====================================================
 START
 ===================================================== */
+
+let authObserverStarted=false;
+
+async function restoreDreamPlaySession(){
+
+try{
+
+await initFirebase();
+
+if(authObserverStarted)return;
+
+authObserverStarted=true;
+
+const {onAuthStateChanged}=window.firebaseFunctions;
+
+const {doc,getDoc}=window.firestoreFunctions;
+
+onAuthStateChanged(auth,async function(user){
+
+if(!user){
+
+currentUser=null;
+currentPlayer=null;
+
+showLogin();
+
+return;
+
+}
+
+currentUser=user;
+
+if(user.uid===ADMIN_UID){
+
+showAdminPage();
+
+return;
+
+}
+
+try{
+
+const playerSnap=await getDoc(
+
+doc(db,"players",user.uid)
+
+);
+
+let player=playerSnap.exists()?playerSnap.data():null;
+
+if(!player){
+
+player=getSavedPlayerSession();
+
+}
+
+if(player && player.uid===user.uid){
+
+currentPlayer={
+uid:user.uid,
+name:player.name||"",
+phone:player.phone||""
+};
+
+savePlayerSession(currentPlayer);
+
+showPlayerPage();
+
+}else{
+
+await window.firebaseFunctions.signOut(auth);
+
+showLogin();
+
+}
+
+}catch(error){
+
+console.error("Session restore failed:",error);
+
+const saved=getSavedPlayerSession();
+
+if(saved && saved.uid===user.uid){
+
+currentPlayer=saved;
+
+showPlayerPage();
+
+}else{
+
+showLogin();
+
+}
+
+}
+
+});
+
+}catch(error){
+
+console.error("Firebase session restore failed:",error);
+
+showLogin();
+
+}
+
+}
 
 window.addEventListener(
 "DOMContentLoaded",
@@ -4245,12 +4441,11 @@ document.getElementById(
 
 if(dateInput){
 
-dateInput.value=
-todayString();
+dateInput.value=todayString();
 
 }
 
-showLogin();
+restoreDreamPlaySession();
 
 }
 );
