@@ -897,7 +897,8 @@ Logout
 <p class="small">Need help with Dream Play? Contact the admin directly on WhatsApp.</p>
 <a
   class="contact-admin"
-  href="https://web.whatsapp.com/send?phone=917593011528&amp;text=Hello%2C%20I%20need%20support%20with%20Dream%20Play."
+  href="#"
+  onclick="contactAdmin(); return false;"
   style="display:flex;text-decoration:none;cursor:pointer;align-items:center;gap:12px;"
 >
   <div class="contact-icon">📱</div>
@@ -1745,10 +1746,20 @@ return;
 
 }
 
-if(phone.length!==10){
+if(!/^[6-9][0-9]{9}$/.test(phone)){
 
 message.textContent=
-"Please enter a valid 10-digit phone number.";
+"Please enter a valid Indian mobile number (10 digits starting with 6, 7, 8 or 9).";
+
+return;
+
+}
+
+// Reject obvious placeholder/fake numbers such as 9999999999.
+if(/^([0-9])\1{9}$/.test(phone)){
+
+message.textContent=
+"Please enter your real mobile number.";
 
 return;
 
@@ -4223,17 +4234,21 @@ WHATSAPP SUPPORT
 
 function contactAdmin(){
 
-const text=encodeURIComponent(
+const phone = ADMIN_WHATSAPP;
+
+const message = encodeURIComponent(
 "Hello, I need support with Dream Play."
 );
 
-const url=
-"https://web.whatsapp.com/send?phone="+
-ADMIN_WHATSAPP+
-"&text="+
-text;
+const url =
+"https://wa.me/" +
+phone +
+"?text=" +
+message;
 
-window.location.href=url;
+// Use a normal HTTPS WhatsApp link.
+// Android/browser decides whether to hand off to the installed WhatsApp app.
+window.open(url,"_blank","noopener,noreferrer");
 
 }
 
