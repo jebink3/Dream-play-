@@ -511,6 +511,24 @@ text-align:center;
   margin-top:12px;
 }
 
+/* CHAT */
+.chat-btn{background:#7c3aed;color:white;margin-top:8px}
+.chat-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:14px;z-index:100}
+.chat-box{background:white;width:100%;max-width:520px;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.chat-head{background:#07111f;color:white;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.chat-head strong{font-size:18px}
+.chat-close{width:auto;margin:0;background:#334155;color:white;padding:8px 12px;border-radius:9px}
+.chat-messages{height:380px;overflow-y:auto;padding:14px;background:#f4f7fb}
+.chat-message{max-width:82%;padding:10px 12px;border-radius:14px;margin:8px 0;line-height:1.35;word-break:break-word}
+.chat-message.me{margin-left:auto;background:#dbeafe}
+.chat-message.them{margin-right:auto;background:white;border:1px solid #e2e8f0}
+.chat-meta{font-size:11px;color:#64748b;margin-top:4px}
+.chat-compose{display:flex;gap:8px;padding:12px;border-top:1px solid #e2e8f0;background:white}
+.chat-compose input{margin:0;flex:1}
+.chat-send{width:auto;margin:0;background:#2563eb;color:white;padding:12px 16px}
+.chat-empty{text-align:center;color:#64748b;padding:50px 10px}
+.chat-launch{background:#7c3aed;color:white}
+
 @media(max-width:650px){
   .hero{min-height:330px}
   .hero-copy{
@@ -762,7 +780,7 @@ onclick="showAdminLogin()">⚙️ Admin</button>
 </div>
 <div class="feature-row">
   <div class="feature-mini"><strong>⚡ Live Rooms</strong><span>Instant H2H updates</span></div>
-  <div class="feature-mini"><strong>💬 WhatsApp Admin</strong><span>Private admin contact</span></div>
+  <div class="feature-mini"><strong>💬 Live Chat</strong><span>Private admin contact</span></div>
   <div class="feature-mini"><strong>🏆 Results</strong><span>Winner updates</span></div>
 </div>
 
@@ -874,6 +892,12 @@ Logout
 
 </div>
 
+<div class="card">
+<h3>💬 Chat with Admin</h3>
+<p class="small">Send a private message to Dream Play Admin. Messages appear live.</p>
+<button type="button" class="chat-launch" onclick="openPlayerChat()">💬 Open Live Chat</button>
+</div>
+
 <div class="hero">
 
 <div class="hero-copy">
@@ -911,28 +935,6 @@ alt="Dream Play"
 <h3>Football</h3>
 <p>Match H2H</p>
 </div>
-
-</div>
-
-<div class="card">
-
-<a
-class="contact-admin"
-href="https://wa.me/917593011528?text=Hello%2C%20I%20need%20support%20with%20Dream%20Play."
-target="_blank"
-rel="noopener noreferrer"
-style="text-decoration:none;">
-
-<div class="contact-icon">💬</div>
-
-<div class="contact-text">
-<strong>Contact Admin on WhatsApp</strong>
-<span>Need help? Chat directly with Dream Play Admin.</span>
-</div>
-
-<div class="contact-arrow">›</div>
-
-</a>
 
 </div>
 
@@ -1203,11 +1205,9 @@ onclick="selectTeam('B')">
 </div>
 
 
-<a
+<div
 class="contact-admin"
-href="https://wa.me/917593011528?text=Hello%2C%20I%20need%20support%20with%20Dream%20Play."
-target="_blank"
-rel="noopener noreferrer">
+onclick="contactAdmin()">
 
 <div class="contact-icon">
 💬
@@ -1283,6 +1283,23 @@ Join H2H
 </div>
 </div>
 
+<!-- LIVE CHAT MODAL -->
+<div id="chatModal" class="chat-modal hidden">
+  <div class="chat-box">
+    <div class="chat-head">
+      <strong id="chatTitle">💬 Live Chat</strong>
+      <button type="button" class="chat-close" onclick="closeChat()">✕</button>
+    </div>
+    <div id="chatMessages" class="chat-messages">
+      <div class="chat-empty">Loading chat...</div>
+    </div>
+    <div class="chat-compose">
+      <input id="chatInput" type="text" maxlength="1000" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+      <button type="button" class="chat-send" onclick="sendChatMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
 <script>
 
 /* =====================================================
@@ -1323,7 +1340,8 @@ const ADMIN_WHATSAPP=
 let firebaseApp=null;
 let auth=null;
 let db=null;
-let let firebaseReady=false;
+let messaging=null;
+let firebaseReady=false;
   
 let currentUser=null;
 let currentPlayer=null;
@@ -1332,6 +1350,10 @@ let selectedAmount=null;
 let selectedPrize=null;
 let selectedTeam=null;
 let waitingRoom=null;
+let chatUnsubscribe=null;
+let activeChatId=null;
+let activeChatPlayerUid=null;
+let activeChatMode=null;
 
 
 const CONTESTS=[
@@ -1368,19 +1390,20 @@ const firestoreModule=
 await import(
 "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js"
 );
+const messagingModule=
+await import(
+"https://www.gstatic.com/firebasejs/11.0.2/firebase-messaging.js"
+);
 firebaseApp=
 appModule.initializeApp(FIREBASE_CONFIG);
 
 auth=
 authModule.getAuth(firebaseApp);
 
-await authModule.setPersistence(
-auth,
-authModule.browserLocalPersistence
-);
-
 db=
 firestoreModule.getFirestore(firebaseApp);
+messaging=
+messagingModule.getMessaging(firebaseApp);
 window.firebaseFunctions={
 
 signInWithEmailAndPassword:
@@ -1392,6 +1415,11 @@ authModule.createUserWithEmailAndPassword,
 signOut:
 authModule.signOut,
 
+onAuthStateChanged:
+authModule.onAuthStateChanged,
+
+getToken:
+messagingModule.getToken
 
 };
 
@@ -1401,6 +1429,83 @@ firestoreModule;
 firebaseReady=true;
 
 }
+/* =====================================================
+FCM ADMIN NOTIFICATIONS
+===================================================== */
+
+const FCM_VAPID_KEY =
+"BA80bWVpfKUNCSdNt1_gmvhhXEA-C4J86fnjk3S_JNpONjhC76cxJ-rf9HcO6onxBOp5o2TMYkisgy74s67kq-g";
+
+async function enableAdminNotifications(){
+
+if(!currentUser)return;
+
+if(currentUser.uid!==ADMIN_UID)return;
+
+try{
+
+const permission=
+await Notification.requestPermission();
+
+if(permission!=="granted"){
+
+console.log("Notification permission not granted.");
+
+return;
+
+}
+
+const serviceWorkerRegistration =
+  await navigator.serviceWorker.register(
+    "/Dream-play-/firebase-messaging-sw.js"
+  );
+
+const token =
+  await window.firebaseFunctions.getToken(
+    messaging,
+    {
+      vapidKey: FCM_VAPID_KEY,
+      serviceWorkerRegistration:
+        serviceWorkerRegistration
+    }
+  );
+
+if(!token){
+
+console.log("FCM token not received.");
+
+return;
+
+}
+
+console.log(
+"Dream Play FCM token:",
+token
+);
+await window.firestoreFunctions.setDoc(
+  window.firestoreFunctions.doc(
+    db,
+    "adminNotificationTokens",
+    token
+  ),
+  {
+    token: token,
+    adminUid: currentUser.uid,
+    updatedAt:
+      window.firestoreFunctions.serverTimestamp()
+  }
+);
+}catch(error){
+
+console.error(
+"FCM notification setup failed:",
+error
+);
+
+}
+
+  }
+
 /* =====================================================
 HELPERS
 ===================================================== */
@@ -1664,9 +1769,18 @@ await initFirebase();
 
 const {
 signInWithEmailAndPassword,
-createUserWithEmailAndPassword
+createUserWithEmailAndPassword,
+signOut
 }=
 window.firebaseFunctions;
+
+if(auth.currentUser){
+
+try{
+await signOut(auth);
+}catch(e){}
+
+}
 
 const email=
 playerEmail(phone);
@@ -1783,6 +1897,7 @@ console.error(error);
 
 }
 
+closeChat();
 currentUser=null;
 currentPlayer=null;
 selectedMatch=null;
@@ -1860,6 +1975,13 @@ currentUser=
 credential.user;
 
 showAdminPage();
+
+enableAdminNotifications().catch(err => {
+  console.error("FCM notification setup failed:", err);
+});
+
+}catch(error){
+
 console.error(error);
   
 message.textContent=
@@ -1887,6 +2009,7 @@ await window
 
 }catch(error){}
 
+closeChat();
 currentUser=null;
 
 showLogin();
@@ -2428,12 +2551,8 @@ document
 .getElementById("teamBButton")
 .classList.remove(
 "selected",
-"disabled-team",
-"available-team"
+"disabled-team"
 );
-
-document.getElementById("teamAButton").disabled=false;
-document.getElementById("teamBButton").disabled=false;
 
 document
 .getElementById("joinRoomInfo")
@@ -2453,16 +2572,12 @@ await findWaitingRoom(amount);
 
 if(waitingRoom){
 
-updateTeamButtons();
-
 document
 .getElementById("joinRoomInfo")
 .textContent=
-"🔒 One team is already selected. The grey team cannot be clicked. Choose the other team.";
+"A player is already waiting. Choose the opposite team.";
 
 }else{
-
-updateTeamButtons();
 
 document
 .getElementById("joinRoomInfo")
@@ -2485,75 +2600,44 @@ document
 }
 
 
-function updateTeamButtons(){
-
-const teamAButton=document.getElementById("teamAButton");
-const teamBButton=document.getElementById("teamBButton");
-
-if(!teamAButton||!teamBButton||!selectedMatch)return;
-
-teamAButton.disabled=false;
-teamBButton.disabled=false;
-
-teamAButton.classList.remove("disabled-team","available-team","selected");
-teamBButton.classList.remove("disabled-team","available-team","selected");
-
-teamAButton.textContent=selectedMatch.teamA+" • SELECT";
-teamBButton.textContent=selectedMatch.teamB+" • SELECT";
-
-if(waitingRoom){
-
-if(waitingRoom.player1Team==="A"){
-teamAButton.disabled=true;
-teamAButton.classList.add("disabled-team");
-teamAButton.textContent=selectedMatch.teamA+" • ALREADY SELECTED 🔒";
-teamAButton.title=selectedMatch.teamA+" is already selected in this room";
-teamBButton.classList.add("available-team");
-}else if(waitingRoom.player1Team==="B"){
-teamBButton.disabled=true;
-teamBButton.classList.add("disabled-team");
-teamBButton.textContent=selectedMatch.teamB+" • ALREADY SELECTED 🔒";
-teamBButton.title=selectedMatch.teamB+" is already selected in this room";
-teamAButton.classList.add("available-team");
-}
-
-}
-
-}
-
 function selectTeam(team){
-
-if(waitingRoom && waitingRoom.player1Team===team){
-return;
-}
 
 selectedTeam=team;
 
-const teamAButton=document.getElementById("teamAButton");
-const teamBButton=document.getElementById("teamBButton");
+document
+.getElementById("teamAButton")
+.classList.toggle(
+"selected",
+team==="A"
+);
 
-teamAButton.classList.toggle("selected",team==="A");
-teamBButton.classList.toggle("selected",team==="B");
+document
+.getElementById("teamBButton")
+.classList.toggle(
+"selected",
+team==="B"
+);
 
 if(waitingRoom){
 
-if(waitingRoom.player1Team==="A"){
-teamAButton.disabled=true;
-teamAButton.classList.add("disabled-team");
-teamAButton.classList.remove("selected");
-teamBButton.disabled=false;
-teamBButton.classList.add("available-team");
-}else if(waitingRoom.player1Team==="B"){
-teamBButton.disabled=true;
-teamBButton.classList.add("disabled-team");
-teamBButton.classList.remove("selected");
-teamAButton.disabled=false;
-teamAButton.classList.add("available-team");
-}
+document
+.getElementById("teamAButton")
+.classList.toggle(
+"disabled-team",
+waitingRoom.player1Team==="A"
+);
+
+document
+.getElementById("teamBButton")
+.classList.toggle(
+"disabled-team",
+waitingRoom.player1Team==="B"
+);
 
 }
 
 }
+
 
 function closeJoinModal(){
 
@@ -2783,12 +2867,6 @@ currentUser.uid,
 
 player2Team:
 selectedTeam,
-
-teamAName:
-room.teamAName || selectedMatch.teamA,
-
-teamBName:
-room.teamBName || selectedMatch.teamB,
 
 playerCount:2,
 
@@ -3183,8 +3261,8 @@ Display value:
 <strong>
 ${
 myTeam==="A"
-?escapeHtml(room.teamAName||"Team A")
-:escapeHtml(room.teamBName||"Team B")
+?"Team A"
+:"Team B"
 }
 </strong>
 
@@ -3581,6 +3659,8 @@ ${escapeHtml(
 p1.phone||"Unknown"
 )}
 
+${room.player1Uid?`<button type="button" class="chat-btn" onclick="openAdminChat('${room.player1Uid}', '${escapeHtml((p1.name||"Player 1").replace(/'/g,"&#39;"))}')">💬 Chat with ${escapeHtml(p1.name||"Player 1")}</button>`:""}
+
 <br>
 
 Team:
@@ -3616,6 +3696,8 @@ Phone:
 ${escapeHtml(
 p2.phone||"Unknown"
 )}
+
+${room.player2Uid?`<button type="button" class="chat-btn" onclick="openAdminChat('${room.player2Uid}', '${escapeHtml((p2.name||"Player 2").replace(/'/g,"&#39;"))}')">💬 Chat with ${escapeHtml(p2.name||"Player 2")}</button>`:""}
 
 <br>
 
@@ -4142,16 +4224,191 @@ alert(
 
 
 /* =====================================================
+LIVE CHAT
+===================================================== */
+
+function chatIdForPlayer(uid){
+
+return "admin_"+uid;
+
+}
+
+function closeChat(){
+
+if(chatUnsubscribe){
+try{chatUnsubscribe();}catch(e){}
+chatUnsubscribe=null;
+}
+
+activeChatId=null;
+activeChatPlayerUid=null;
+activeChatMode=null;
+
+document.getElementById("chatModal").classList.add("hidden");
+
+document.getElementById("chatInput").value="";
+
+}
+
+async function openPlayerChat(){
+
+if(!currentUser || !currentPlayer){
+alert("Please login first.");
+return;
+}
+
+openChat("Admin",currentUser.uid,"player");
+
+}
+
+async function openAdminChat(playerUid,playerName){
+
+if(!currentUser || currentUser.uid!==ADMIN_UID){
+alert("Admin login required.");
+return;
+}
+
+openChat(playerName||"Player",playerUid,"admin");
+
+}
+
+async function openChat(title,playerUid,mode){
+
+activeChatId=chatIdForPlayer(playerUid);
+activeChatPlayerUid=playerUid;
+activeChatMode=mode;
+
+document.getElementById("chatTitle").textContent="💬 "+title;
+document.getElementById("chatMessages").innerHTML='<div class="chat-empty">Loading chat...</div>';
+document.getElementById("chatModal").classList.remove("hidden");
+
+try{
+
+await initFirebase();
+
+if(chatUnsubscribe){
+try{chatUnsubscribe();}catch(e){}
+}
+
+const {collection,query,orderBy,onSnapshot}=window.firestoreFunctions;
+
+const messagesRef=collection(db,"chats",activeChatId,"messages");
+const messagesQuery=query(messagesRef,orderBy("createdAt","asc"));
+
+chatUnsubscribe=onSnapshot(messagesQuery,(snapshot)=>{
+
+const box=document.getElementById("chatMessages");
+
+if(snapshot.empty){
+box.innerHTML='<div class="chat-empty">No messages yet. Say hello 👋</div>';
+return;
+}
+
+box.innerHTML=snapshot.docs.map(item=>{
+
+const m=item.data();
+const mine=currentUser && m.senderUid===currentUser.uid;
+let time="";
+
+try{
+if(m.createdAt && m.createdAt.toDate){
+time=m.createdAt.toDate().toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+}
+}catch(e){}
+
+return `<div class="chat-message ${mine?"me":"them"}">
+<div>${escapeHtml(m.text||"")}</div>
+<div class="chat-meta">${mine?"You":escapeHtml(m.senderName||"Admin")} ${time?"• "+time:""}</div>
+</div>`;
+
+}).join("");
+
+box.scrollTop=box.scrollHeight;
+
+},(error)=>{
+
+console.error(error);
+document.getElementById("chatMessages").innerHTML='<div class="chat-empty">Could not load chat. Please update the Firestore rules.</div>';
+
+});
+
+setTimeout(()=>document.getElementById("chatInput").focus(),150);
+
+}catch(error){
+
+console.error(error);
+document.getElementById("chatMessages").innerHTML='<div class="chat-empty">Chat could not start: '+escapeHtml(error.message||error.code||error)+'</div>';
+
+}
+
+}
+
+async function sendChatMessage(){
+
+const input=document.getElementById("chatInput");
+const text=input.value.trim();
+
+if(!text || !activeChatId || !currentUser)return;
+
+input.disabled=true;
+
+try{
+
+await initFirebase();
+
+const {collection,addDoc,serverTimestamp}=window.firestoreFunctions;
+
+await addDoc(
+collection(db,"chats",activeChatId,"messages"),
+{
+text:text,
+senderUid:currentUser.uid,
+senderName:activeChatMode==="admin"?"Dream Play Admin":(currentPlayer?.name||"Player"),
+createdAt:serverTimestamp()
+}
+);
+
+input.value="";
+
+}catch(error){
+
+console.error(error);
+alert("Message could not be sent: "+(error.message||error.code||error));
+
+}finally{
+
+input.disabled=false;
+input.focus();
+
+}
+
+}
+
+
+/* =====================================================
 WHATSAPP SUPPORT
 ===================================================== */
 
 function contactAdmin(){
-  window.open(
-    "https://wa.me/917593011528?text=Hello%2C%20I%20need%20support%20with%20Dream%20Play.",
-    "_blank",
-    "noopener,noreferrer"
-  );
+
+const text=
+encodeURIComponent(
+"Hello, I need support with Dream Play."
+);
+
+const url=
+"https://wa.me/"+
+ADMIN_WHATSAPP+
+"?text="+
+text;
+
+window.open(
+url,
+"_blank"
+);
+
 }
+
 
 /* =====================================================
 SHARE DREAM PLAY
@@ -4271,9 +4528,148 @@ window.deleteMatch=deleteMatch;
 window.deleteOldRooms=deleteOldRooms;
 window.contactAdmin=contactAdmin;
 window.shareDreamPlay=shareDreamPlay;
+window.openPlayerChat=openPlayerChat;
+window.openAdminChat=openAdminChat;
+window.closeChat=closeChat;
+window.sendChatMessage=sendChatMessage;
+
+
 /* =====================================================
-START
+SESSION RESTORE + START
 ===================================================== */
+
+async function restoreDreamPlaySession(){
+
+try{
+
+await initFirebase();
+
+const {
+onAuthStateChanged
+}=
+window.firebaseFunctions;
+
+await new Promise((resolve)=>{
+
+let finished=false;
+
+const finish=()=>{
+if(finished)return;
+finished=true;
+resolve();
+};
+
+const unsubscribe=
+onAuthStateChanged(
+auth,
+async (user)=>{
+
+if(!user){
+
+currentUser=null;
+currentPlayer=null;
+showLogin();
+finish();
+return;
+
+}
+
+currentUser=user;
+
+if(user.uid===ADMIN_UID){
+
+showAdminPage();
+
+enableAdminNotifications().catch(err=>{
+console.error(
+"FCM notification setup failed:",
+err
+);
+});
+
+finish();
+return;
+
+}
+
+try{
+
+const {
+doc,
+getDoc
+}=
+window.firestoreFunctions;
+
+const playerSnap=
+await getDoc(
+doc(
+db,
+"players",
+user.uid
+)
+);
+
+if(
+!playerSnap.exists()
+){
+
+await window.firebaseFunctions.signOut(auth);
+
+currentUser=null;
+currentPlayer=null;
+showLogin();
+finish();
+return;
+
+}
+
+const playerData=
+playerSnap.data();
+
+currentPlayer={
+uid:user.uid,
+name:playerData.name||"",
+phone:playerData.phone||""
+};
+
+showPlayerPage();
+
+}catch(error){
+
+console.error(
+"Could not restore player session:",
+error
+);
+
+await window.firebaseFunctions.signOut(auth);
+
+currentUser=null;
+currentPlayer=null;
+showLogin();
+
+}
+
+finish();
+
+}
+);
+
+});
+
+}catch(error){
+
+console.error(
+"Session restore failed:",
+error
+);
+
+currentUser=null;
+currentPlayer=null;
+showLogin();
+
+}
+
+}
 
 window.addEventListener(
 "DOMContentLoaded",
@@ -4291,7 +4687,7 @@ todayString();
 
 }
 
-showLogin();
+restoreDreamPlaySession();
 
 }
 );
