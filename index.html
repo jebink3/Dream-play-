@@ -351,15 +351,6 @@ input,select{
 
 .team-btn.disabled-team{
   opacity:.35;
-  filter:grayscale(1);
-  cursor:not-allowed;
-  pointer-events:none;
-}
-
-.team-btn:disabled{
-  opacity:.35;
-  filter:grayscale(1);
-  cursor:not-allowed;
 }
 
 .modal{
@@ -413,7 +404,8 @@ hr{
   color:#667085;
 }
 
-.contact-admin{
+.contact-admin,
+.share-admin{
   display:flex;
   align-items:center;
   gap:12px;
@@ -429,11 +421,27 @@ hr{
   color:#166534;
 }
 
+.share-admin{
+  border:2px solid #2563eb;
+  background:#eff6ff;
+  color:#1d4ed8;
+}
 
-
-
+.contact-icon,
+.share-icon{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  flex:none;
+}
 
 .contact-icon{background:#16a34a}
+.share-icon{background:#2563eb}
 
 .contact-text{flex:1}
 
@@ -502,8 +510,6 @@ text-align:center;
   border-radius:12px;
   margin-top:12px;
 }
-
-/* CHAT */
 
 @media(max-width:650px){
   .hero{min-height:330px}
@@ -756,7 +762,7 @@ onclick="showAdminLogin()">⚙️ Admin</button>
 </div>
 <div class="feature-row">
   <div class="feature-mini"><strong>⚡ Live Rooms</strong><span>Instant H2H updates</span></div>
-  <div class="feature-mini"><strong>💬 WhatsApp Admin</strong><span>Direct admin contact</span></div>
+  <div class="feature-mini"><strong>💬 WhatsApp Admin</strong><span>Private admin contact</span></div>
   <div class="feature-mini"><strong>🏆 Results</strong><span>Winner updates</span></div>
 </div>
 
@@ -868,14 +874,6 @@ Logout
 
 </div>
 
-<div class="card">
-<h3>💬 Contact Admin</h3>
-<p class="small">Need help with your H2H? Contact the Dream Play Admin directly on WhatsApp.</p>
-<button type="button" class="btn-green" onclick="contactAdmin()">
-💬 Contact Admin on WhatsApp
-</button>
-</div>
-
 <div class="hero">
 
 <div class="hero-copy">
@@ -913,6 +911,28 @@ alt="Dream Play"
 <h3>Football</h3>
 <p>Match H2H</p>
 </div>
+
+</div>
+
+<div class="card">
+
+<a
+class="contact-admin"
+href="https://wa.me/917593011528?text=Hello%2C%20I%20need%20support%20with%20Dream%20Play."
+target="_blank"
+rel="noopener noreferrer"
+style="text-decoration:none;">
+
+<div class="contact-icon">💬</div>
+
+<div class="contact-text">
+<strong>Contact Admin on WhatsApp</strong>
+<span>Need help? Chat directly with Dream Play Admin.</span>
+</div>
+
+<div class="contact-arrow">›</div>
+
+</a>
 
 </div>
 
@@ -1183,9 +1203,11 @@ onclick="selectTeam('B')">
 </div>
 
 
-<div
+<a
 class="contact-admin"
-onclick="contactAdmin()">
+href="https://wa.me/917593011528?text=Hello%2C%20I%20need%20support%20with%20Dream%20Play."
+target="_blank"
+rel="noopener noreferrer">
 
 <div class="contact-icon">
 💬
@@ -1208,6 +1230,29 @@ Chat with admin on WhatsApp
 </div>
 
 
+<div
+class="share-admin"
+onclick="shareDreamPlay()">
+
+<div class="share-icon">
+🔗
+</div>
+
+<div class="contact-text">
+
+<strong>Share Dream Play</strong>
+
+<span>
+Share this website with family
+</span>
+
+</div>
+
+<div class="contact-arrow">
+›
+</div>
+
+</div>
 
 
 <p
@@ -1278,7 +1323,7 @@ const ADMIN_WHATSAPP=
 let firebaseApp=null;
 let auth=null;
 let db=null;
-let firebaseReady=false;
+let let firebaseReady=false;
   
 let currentUser=null;
 let currentPlayer=null;
@@ -1329,6 +1374,11 @@ appModule.initializeApp(FIREBASE_CONFIG);
 auth=
 authModule.getAuth(firebaseApp);
 
+await authModule.setPersistence(
+auth,
+authModule.browserLocalPersistence
+);
+
 db=
 firestoreModule.getFirestore(firebaseApp);
 window.firebaseFunctions={
@@ -1342,8 +1392,8 @@ authModule.createUserWithEmailAndPassword,
 signOut:
 authModule.signOut,
 
-onAuthStateChanged:
-authModule.onAuthStateChanged
+getToken:
+messagingModule.getToken
 
 };
 
@@ -1405,57 +1455,6 @@ function playerPassword(phone){
 return "DP!"+
 normalizePhone(phone)+
 "X9#";
-
-}
-
-/* =====================================================
-PERSIST PLAYER SESSION
-===================================================== */
-
-function savePlayerSession(player){
-
-try{
-
-localStorage.setItem(
-"dreamPlayPlayerSession",
-JSON.stringify(player)
-);
-
-}catch(error){
-
-console.error("Could not save player session:",error);
-
-}
-
-}
-
-function getSavedPlayerSession(){
-
-try{
-
-const raw=localStorage.getItem(
-"dreamPlayPlayerSession"
-);
-
-return raw?JSON.parse(raw):null;
-
-}catch(error){
-
-return null;
-
-}
-
-}
-
-function clearPlayerSession(){
-
-try{
-
-localStorage.removeItem(
-"dreamPlayPlayerSession"
-);
-
-}catch(error){}
 
 }
 
@@ -1672,14 +1671,6 @@ signOut
 }=
 window.firebaseFunctions;
 
-if(auth.currentUser){
-
-try{
-await signOut(auth);
-}catch(e){}
-
-}
-
 const email=
 playerEmail(phone);
 
@@ -1729,8 +1720,6 @@ name:name,
 phone:phone
 
 };
-
-savePlayerSession(currentPlayer);
 
 const {
 doc,
@@ -1800,7 +1789,6 @@ console.error(error);
 currentUser=null;
 currentPlayer=null;
 selectedMatch=null;
-clearPlayerSession();
 
 showLogin();
 
@@ -1875,9 +1863,6 @@ currentUser=
 credential.user;
 
 showAdminPage();
-
-}catch(error){
-
 console.error(error);
   
 message.textContent=
@@ -2385,32 +2370,6 @@ id:item.id,
 
 
 /* =====================================================
-TEAM BUTTON STATE
-===================================================== */
-
-function updateTeamButtons(){
-
-const teamAButton=document.getElementById("teamAButton");
-const teamBButton=document.getElementById("teamBButton");
-
-if(!teamAButton||!teamBButton)return;
-
-const blockedA=!!waitingRoom && waitingRoom.player1Team==="A";
-const blockedB=!!waitingRoom && waitingRoom.player1Team==="B";
-
-teamAButton.disabled=blockedA;
-teamBButton.disabled=blockedB;
-
-teamAButton.classList.toggle("disabled-team",blockedA);
-teamBButton.classList.toggle("disabled-team",blockedB);
-
-if(blockedA && selectedTeam==="A")selectedTeam=null;
-if(blockedB && selectedTeam==="B")selectedTeam=null;
-
-}
-
-
-/* =====================================================
 JOIN MODAL
 ===================================================== */
 
@@ -2475,10 +2434,6 @@ document
 "disabled-team"
 );
 
-// Both teams are initially available until the waiting room is found.
-document.getElementById("teamAButton").disabled=false;
-document.getElementById("teamBButton").disabled=false;
-
 document
 .getElementById("joinRoomInfo")
 .textContent=
@@ -2497,18 +2452,12 @@ await findWaitingRoom(amount);
 
 if(waitingRoom){
 
-updateTeamButtons();
-
 document
 .getElementById("joinRoomInfo")
 .textContent=
-waitingRoom.player1Team==="A"
-?"A player has already joined Team A. Team A is locked — choose Team B."
-:"A player has already joined Team B. Team B is locked — choose Team A.";
+"A player is already waiting. Choose the opposite team.";
 
 }else{
-
-updateTeamButtons();
 
 document
 .getElementById("joinRoomInfo")
@@ -2533,21 +2482,6 @@ document
 
 function selectTeam(team){
 
-const button=
-team==="A"
-?document.getElementById("teamAButton")
-:document.getElementById("teamBButton");
-
-if(button && button.disabled)return;
-
-if(waitingRoom && waitingRoom.player1Team===team){
-
-selectedTeam=null;
-updateTeamButtons();
-return;
-
-}
-
 selectedTeam=team;
 
 document
@@ -2564,7 +2498,23 @@ document
 team==="B"
 );
 
-updateTeamButtons();
+if(waitingRoom){
+
+document
+.getElementById("teamAButton")
+.classList.toggle(
+"disabled-team",
+waitingRoom.player1Team==="A"
+);
+
+document
+.getElementById("teamBButton")
+.classList.toggle(
+"disabled-team",
+waitingRoom.player1Team==="B"
+);
+
+}
 
 }
 
@@ -2798,10 +2748,11 @@ currentUser.uid,
 player2Team:
 selectedTeam,
 
-player2TeamName:
-selectedTeam==="A"
-?selectedMatch.teamA
-:selectedMatch.teamB,
+teamAName:
+room.teamAName || selectedMatch.teamA,
+
+teamBName:
+room.teamBName || selectedMatch.teamB,
 
 playerCount:2,
 
@@ -2901,11 +2852,6 @@ currentUser.uid,
 
 player1Team:
 selectedTeam,
-
-player1TeamName:
-selectedTeam==="A"
-?selectedMatch.teamA
-:selectedMatch.teamB,
 
 player2Uid:null,
 
@@ -3200,9 +3146,9 @@ Display value:
 
 <strong>
 ${
-player1
-?(room.player1TeamName || (myTeam==="A"?"Team A":"Team B"))
-:(room.player2TeamName || (myTeam==="A"?"Team A":"Team B"))
+myTeam==="A"
+?escapeHtml(room.teamAName||"Team A")
+:escapeHtml(room.teamBName||"Team B")
 }
 </strong>
 
@@ -3220,10 +3166,6 @@ room.status==="full"
 </div>
 
 ${result}
-
-<button type="button" class="btn-green" onclick="contactAdmin()">
-💬 Contact Admin on WhatsApp
-</button>
 
 </div>
 
@@ -3603,8 +3545,6 @@ ${escapeHtml(
 p1.phone||"Unknown"
 )}
 
-
-
 <br>
 
 Team:
@@ -3640,8 +3580,6 @@ Phone:
 ${escapeHtml(
 p2.phone||"Unknown"
 )}
-
-
 
 <br>
 
@@ -4168,35 +4106,16 @@ alert(
 
 
 /* =====================================================
-WHATSAPP ADMIN SUPPORT
+WHATSAPP SUPPORT
 ===================================================== */
 
 function contactAdmin(){
-
-const message=encodeURIComponent(
-"Hello, I need support with Dream Play."
-);
-
-const url=
-"https://wa.me/"+
-ADMIN_WHATSAPP+
-"?text="+
-message;
-
-try{
-
-window.location.href=url;
-
-}catch(error){
-
-console.error("WhatsApp open failed:",error);
-
-window.open(url,"_blank");
-
+  window.open(
+    "https://wa.me/917593011528?text=Hello%2C%20I%20need%20support%20with%20Dream%20Play.",
+    "_blank",
+    "noopener,noreferrer"
+  );
 }
-
-}
-
 
 /* =====================================================
 SHARE DREAM PLAY
@@ -4315,120 +4234,10 @@ window.setWinner=setWinner;
 window.deleteMatch=deleteMatch;
 window.deleteOldRooms=deleteOldRooms;
 window.contactAdmin=contactAdmin;
-window.restoreDreamPlaySession=restoreDreamPlaySession;
 window.shareDreamPlay=shareDreamPlay;
-
-
 /* =====================================================
 START
 ===================================================== */
-
-let authObserverStarted=false;
-
-async function restoreDreamPlaySession(){
-
-try{
-
-await initFirebase();
-
-if(authObserverStarted)return;
-
-authObserverStarted=true;
-
-const {onAuthStateChanged}=window.firebaseFunctions;
-
-const {doc,getDoc}=window.firestoreFunctions;
-
-onAuthStateChanged(auth,async function(user){
-
-if(!user){
-
-currentUser=null;
-currentPlayer=null;
-
-showLogin();
-
-return;
-
-}
-
-currentUser=user;
-
-if(user.uid===ADMIN_UID){
-
-showAdminPage();
-
-return;
-
-}
-
-try{
-
-const playerSnap=await getDoc(
-
-doc(db,"players",user.uid)
-
-);
-
-let player=playerSnap.exists()?playerSnap.data():null;
-
-if(!player){
-
-player=getSavedPlayerSession();
-
-}
-
-if(player && player.uid===user.uid){
-
-currentPlayer={
-uid:user.uid,
-name:player.name||"",
-phone:player.phone||""
-};
-
-savePlayerSession(currentPlayer);
-
-showPlayerPage();
-
-}else{
-
-await window.firebaseFunctions.signOut(auth);
-
-showLogin();
-
-}
-
-}catch(error){
-
-console.error("Session restore failed:",error);
-
-const saved=getSavedPlayerSession();
-
-if(saved && saved.uid===user.uid){
-
-currentPlayer=saved;
-
-showPlayerPage();
-
-}else{
-
-showLogin();
-
-}
-
-}
-
-});
-
-}catch(error){
-
-console.error("Firebase session restore failed:",error);
-
-showLogin();
-
-}
-
-}
 
 window.addEventListener(
 "DOMContentLoaded",
@@ -4441,11 +4250,12 @@ document.getElementById(
 
 if(dateInput){
 
-dateInput.value=todayString();
+dateInput.value=
+todayString();
 
 }
 
-restoreDreamPlaySession();
+showLogin();
 
 }
 );
