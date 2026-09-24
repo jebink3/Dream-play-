@@ -893,9 +893,20 @@ Logout
 </div>
 
 <div class="card">
-<h3>💬 Chat with Admin</h3>
-<p class="small">Send a private message to Dream Play Admin. Messages appear live.</p>
-<button type="button" class="chat-launch" onclick="openPlayerChat()">💬 Open Live Chat</button>
+<h3>📱 WhatsApp Admin</h3>
+<p class="small">Need help with Dream Play? Contact the admin directly on WhatsApp.</p>
+<a
+  class="contact-admin"
+  href="https://web.whatsapp.com/send?phone=917593011528&amp;text=Hello%2C%20I%20need%20support%20with%20Dream%20Play."
+  style="display:flex;text-decoration:none;cursor:pointer;align-items:center;gap:12px;"
+>
+  <div class="contact-icon">📱</div>
+  <div class="contact-text">
+    <strong>Contact Admin on WhatsApp</strong>
+    <span>Open WhatsApp and send a message</span>
+  </div>
+  <div class="contact-arrow">›</div>
+</a>
 </div>
 
 <div class="hero">
@@ -1281,23 +1292,6 @@ Join H2H
 </div>
 
 </div>
-</div>
-
-<!-- LIVE CHAT MODAL -->
-<div id="chatModal" class="chat-modal hidden">
-  <div class="chat-box">
-    <div class="chat-head">
-      <strong id="chatTitle">💬 Live Chat</strong>
-      <button type="button" class="chat-close" onclick="closeChat()">✕</button>
-    </div>
-    <div id="chatMessages" class="chat-messages">
-      <div class="chat-empty">Loading chat...</div>
-    </div>
-    <div class="chat-compose">
-      <input id="chatInput" type="text" maxlength="1000" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendChatMessage()">
-      <button type="button" class="chat-send" onclick="sendChatMessage()">Send</button>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -4224,188 +4218,22 @@ alert(
 
 
 /* =====================================================
-LIVE CHAT
-===================================================== */
-
-function chatIdForPlayer(uid){
-
-return "admin_"+uid;
-
-}
-
-function closeChat(){
-
-if(chatUnsubscribe){
-try{chatUnsubscribe();}catch(e){}
-chatUnsubscribe=null;
-}
-
-activeChatId=null;
-activeChatPlayerUid=null;
-activeChatMode=null;
-
-document.getElementById("chatModal").classList.add("hidden");
-
-document.getElementById("chatInput").value="";
-
-}
-
-async function openPlayerChat(){
-
-if(!currentUser || !currentPlayer){
-alert("Please login first.");
-return;
-}
-
-openChat("Admin",currentUser.uid,"player");
-
-}
-
-async function openAdminChat(playerUid,playerName){
-
-if(!currentUser || currentUser.uid!==ADMIN_UID){
-alert("Admin login required.");
-return;
-}
-
-openChat(playerName||"Player",playerUid,"admin");
-
-}
-
-async function openChat(title,playerUid,mode){
-
-activeChatId=chatIdForPlayer(playerUid);
-activeChatPlayerUid=playerUid;
-activeChatMode=mode;
-
-document.getElementById("chatTitle").textContent="💬 "+title;
-document.getElementById("chatMessages").innerHTML='<div class="chat-empty">Loading chat...</div>';
-document.getElementById("chatModal").classList.remove("hidden");
-
-try{
-
-await initFirebase();
-
-if(chatUnsubscribe){
-try{chatUnsubscribe();}catch(e){}
-}
-
-const {collection,query,orderBy,onSnapshot}=window.firestoreFunctions;
-
-const messagesRef=collection(db,"chats",activeChatId,"messages");
-const messagesQuery=query(messagesRef,orderBy("createdAt","asc"));
-
-chatUnsubscribe=onSnapshot(messagesQuery,(snapshot)=>{
-
-const box=document.getElementById("chatMessages");
-
-if(snapshot.empty){
-box.innerHTML='<div class="chat-empty">No messages yet. Say hello 👋</div>';
-return;
-}
-
-box.innerHTML=snapshot.docs.map(item=>{
-
-const m=item.data();
-const mine=currentUser && m.senderUid===currentUser.uid;
-let time="";
-
-try{
-if(m.createdAt && m.createdAt.toDate){
-time=m.createdAt.toDate().toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
-}
-}catch(e){}
-
-return `<div class="chat-message ${mine?"me":"them"}">
-<div>${escapeHtml(m.text||"")}</div>
-<div class="chat-meta">${mine?"You":escapeHtml(m.senderName||"Admin")} ${time?"• "+time:""}</div>
-</div>`;
-
-}).join("");
-
-box.scrollTop=box.scrollHeight;
-
-},(error)=>{
-
-console.error(error);
-document.getElementById("chatMessages").innerHTML='<div class="chat-empty">Could not load chat. Please update the Firestore rules.</div>';
-
-});
-
-setTimeout(()=>document.getElementById("chatInput").focus(),150);
-
-}catch(error){
-
-console.error(error);
-document.getElementById("chatMessages").innerHTML='<div class="chat-empty">Chat could not start: '+escapeHtml(error.message||error.code||error)+'</div>';
-
-}
-
-}
-
-async function sendChatMessage(){
-
-const input=document.getElementById("chatInput");
-const text=input.value.trim();
-
-if(!text || !activeChatId || !currentUser)return;
-
-input.disabled=true;
-
-try{
-
-await initFirebase();
-
-const {collection,addDoc,serverTimestamp}=window.firestoreFunctions;
-
-await addDoc(
-collection(db,"chats",activeChatId,"messages"),
-{
-text:text,
-senderUid:currentUser.uid,
-senderName:activeChatMode==="admin"?"Dream Play Admin":(currentPlayer?.name||"Player"),
-createdAt:serverTimestamp()
-}
-);
-
-input.value="";
-
-}catch(error){
-
-console.error(error);
-alert("Message could not be sent: "+(error.message||error.code||error));
-
-}finally{
-
-input.disabled=false;
-input.focus();
-
-}
-
-}
-
-
-/* =====================================================
 WHATSAPP SUPPORT
 ===================================================== */
 
 function contactAdmin(){
 
-const text=
-encodeURIComponent(
+const text=encodeURIComponent(
 "Hello, I need support with Dream Play."
 );
 
 const url=
-"https://wa.me/"+
+"https://web.whatsapp.com/send?phone="+
 ADMIN_WHATSAPP+
-"?text="+
+"&text="+
 text;
 
-window.open(
-url,
-"_blank"
-);
+window.location.href=url;
 
 }
 
@@ -4528,10 +4356,6 @@ window.deleteMatch=deleteMatch;
 window.deleteOldRooms=deleteOldRooms;
 window.contactAdmin=contactAdmin;
 window.shareDreamPlay=shareDreamPlay;
-window.openPlayerChat=openPlayerChat;
-window.openAdminChat=openAdminChat;
-window.closeChat=closeChat;
-window.sendChatMessage=sendChatMessage;
 
 
 /* =====================================================
