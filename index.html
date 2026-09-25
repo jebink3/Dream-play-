@@ -732,6 +732,23 @@ button:hover{transform:translateY(-1px);filter:brightness(1.03)}
   .hero-tagline{font-size:9px;letter-spacing:2px}
 }
 
+
+/* ===== TWO-ROOM H2H DISPLAY ===== */
+.category{padding:14px;overflow:hidden}
+.category-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.category-head strong{font-size:21px}
+.room-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.h2h-room-card{border:1px solid #dbe3ee;border-radius:14px;padding:11px;background:linear-gradient(180deg,#f8fbff,#fff)}
+.h2h-room-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}
+.h2h-room-title{font-size:15px;font-weight:900}.h2h-count{font-size:11px;font-weight:900;color:#475569;white-space:nowrap}
+.team-status{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px;border-radius:10px;margin-top:6px;font-size:12px;font-weight:800}
+.team-status.available{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0}
+.team-status.selected{background:#fff1f2;color:#b91c1c;border:1px solid #fecdd3}
+.team-status .team-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.team-status .team-state{white-space:nowrap;font-size:10px}
+.room-join-btn{margin-top:9px;padding:11px 8px;font-size:13px}.room-join-btn:disabled{cursor:not-allowed;opacity:.55;transform:none;filter:none}
+.category-info{margin-top:10px;padding:10px 11px;border-radius:11px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:12px;line-height:1.45}
+@media(max-width:430px){.room-grid{gap:7px}.h2h-room-card{padding:8px}.h2h-room-title{font-size:13px}.h2h-count{font-size:10px}.team-status{padding:7px 6px;font-size:10px}.team-status .team-state{font-size:8px}.room-join-btn{font-size:11px;padding:10px 5px}}
 </style>
 </head>
 
@@ -2390,43 +2407,41 @@ return matchHasStarted(match)
 CATEGORIES
 ===================================================== */
 
-function loadCategories(){
+async function loadCategories(){
+const box=document.getElementById("categories");
+box.innerHTML="<div class=\"empty\">Loading H2H rooms...</div>";
+if(!selectedMatch){box.innerHTML='<div class="warning">Match not selected.</div>';return;}
+if(matchHasStarted(selectedMatch)){
+ box.innerHTML=CONTESTS.map(c=>`<div class="category"><div class="category-head"><strong>₹${money(c.amount)}</strong><div class="prize">Winning value ₹${money(c.prize)}</div></div><div class="match-closed">🔒 Match started — Joining closed</div></div>`).join("");
+ return;
+}
+try{
+ await initFirebase();
+ const {collection,getDocs,query,where}=window.firestoreFunctions;
+ const snapshot=await getDocs(query(collection(db,"rooms"),where("matchId","==",selectedMatch.id)));
+ const byAmount={}; CONTESTS.forEach(c=>byAmount[c.amount]=[]);
+ snapshot.forEach(item=>{const room={id:item.id,...item.data()}; if(byAmount[room.amount] && byAmount[room.amount].length<2) byAmount[room.amount].push(room);});
+ box.innerHTML=CONTESTS.map(c=>renderCategoryWithTwoRooms(c,byAmount[c.amount][0]||null,byAmount[c.amount][1]||null)).join("");
+}catch(error){console.error(error);box.innerHTML='<div class="warning">Could not load H2H rooms.</div>';}
+}
 
-const box=
-document.getElementById("categories");
+function renderCategoryWithTwoRooms(contest,room1,room2){
+ return `<div class="category"><div class="category-head"><strong>₹${money(contest.amount)}</strong><div class="prize">Winning value ₹${money(contest.prize)}</div></div><div class="room-grid">${renderH2HRoomCard(contest,room1,1)}${renderH2HRoomCard(contest,room2,2)}</div><div class="category-info">ℹ️ <strong>Only 2 rooms.</strong> Each room has 2 players. Each team can be selected by only 1 player per room. The same team can be selected once in Room 1 and once in Room 2.</div></div>`;
+}
 
-box.innerHTML=
-CONTESTS.map(c=>`
-
-<div class="category">
-
-<strong>
-₹${money(c.amount)}
-</strong>
-
-<div class="prize">
-Winning value ₹${money(c.prize)}
-</div>
-
-${matchHasStarted(selectedMatch)
-?`
-<div class="match-closed">🔒 Match started — Joining closed</div>
-`
-:`
-<button
-type="button"
-class="btn-blue"
-onclick="openJoinModal(${c.amount},${c.prize})">
-
-Join H2H
-
-</button>
-`}
-
-</div>
-
-`).join("");
-
+function renderH2HRoomCard(contest,room,roomNumber){
+ const teamA=selectedMatch.teamA, teamB=selectedMatch.teamB;
+ if(!room){
+  return `<div class="h2h-room-card"><div class="h2h-room-head"><span class="h2h-room-title">Room ${roomNumber}</span><span class="h2h-count">👥 0/2</span></div><div class="team-status available"><span class="team-name">🟢 ${escapeHtml(teamA)}</span><span class="team-state">AVAILABLE</span></div><div class="team-status available"><span class="team-name">🟢 ${escapeHtml(teamB)}</span><span class="team-state">AVAILABLE</span></div><button type="button" class="btn-blue room-join-btn" onclick="openJoinModal(${contest.amount},${contest.prize},null,${roomNumber})">Join Room ${roomNumber} →</button></div>`;
+ }
+ const full=room.status==="full" || (room.playerCount||0)>=2;
+ const a=room.player1Team==="A" || room.player2Team==="A";
+ const b=room.player1Team==="B" || room.player2Team==="B";
+ let action;
+ if(full) action='<button type="button" class="btn-gray room-join-btn" disabled>🔒 Room Full</button>';
+ else if(room.player1Uid===currentUser?.uid || room.player2Uid===currentUser?.uid) action='<button type="button" class="btn-gray room-join-btn" disabled>⏳ You are in this room</button>';
+ else action=`<button type="button" class="btn-blue room-join-btn" onclick="openJoinModal(${contest.amount},${contest.prize},'${room.id}',${roomNumber})">Join Room ${roomNumber} →</button>`;
+ return `<div class="h2h-room-card"><div class="h2h-room-head"><span class="h2h-room-title">Room ${roomNumber}</span><span class="h2h-count">👥 ${full?'2/2':'1/2'}</span></div><div class="team-status ${a?'selected':'available'}"><span class="team-name">${a?'🔒':'🟢'} ${escapeHtml(teamA)}</span><span class="team-state">${a?'ALREADY SELECTED':'AVAILABLE'}</span></div><div class="team-status ${b?'selected':'available'}"><span class="team-name">${b?'🔒':'🟢'} ${escapeHtml(teamB)}</span><span class="team-state">${b?'ALREADY SELECTED':'AVAILABLE'}</span></div>${action}</div>`;
 }
 
 
@@ -2434,213 +2449,65 @@ Join H2H
 FIND WAITING ROOM
 ===================================================== */
 
-async function findWaitingRoom(amount){
-
-const {
-collection,
-getDocs,
-query,
-where,
-limit
-}=
-window.firestoreFunctions;
-
-const q=
-query(
-
-collection(db,"rooms"),
-
-where(
-"matchId",
-"==",
-selectedMatch.id
-),
-
-where(
-"amount",
-"==",
-amount
-),
-
-where(
-"status",
-"==",
-"waiting"
-),
-
-limit(1)
-
-);
-
-const snapshot=
-await getDocs(q);
-
-if(snapshot.empty){
-
-return null;
-
+async function getCategoryRooms(amount){
+ const {collection,getDocs,query,where}=window.firestoreFunctions;
+ const snapshot=await getDocs(query(collection(db,"rooms"),where("matchId","==",selectedMatch.id),where("amount","==",amount)));
+ const rooms=[]; snapshot.forEach(item=>rooms.push({id:item.id,...item.data()}));
+ return rooms.slice(0,2);
 }
 
-const item=
-snapshot.docs[0];
-
-return{
-
-id:item.id,
-...item.data()
-
-};
-
+async function findRoomForJoin(amount,roomId=null){
+ const rooms=await getCategoryRooms(amount);
+ if(roomId) return rooms.find(room=>room.id===roomId)||null;
+ return rooms.find(room=>room.status!=="full" && (room.playerCount||0)<2)||null;
 }
+
+async function findWaitingRoom(amount){return findRoomForJoin(amount,null);}
 
 
 /* =====================================================
 JOIN MODAL
 ===================================================== */
 
-async function openJoinModal(
-amount,
-prize
-){
-
-if(selectedMatch && matchHasStarted(selectedMatch)){
-
-alert("🔒 This match has already started. H2H joining is closed.");
-return;
-
-}
-
-if(!currentUser){
-
-alert("Please login first.");
-
-showLogin();
-
-return;
-
-}
-
-selectedAmount=amount;
-selectedPrize=prize;
-selectedTeam=null;
-waitingRoom=null;
-
-document
-.getElementById("joinAmount")
-.textContent=
-"₹"+money(amount);
-
-document
-.getElementById("joinPrize")
-.textContent=
-"₹"+money(prize);
-
-document
-.getElementById("teamAButton")
-.textContent=
-selectedMatch.teamA;
-
-document
-.getElementById("teamBButton")
-.textContent=
-selectedMatch.teamB;
-
-document
-.getElementById("teamAButton")
-.classList.remove(
-"selected",
-"disabled-team"
-);
-
-document
-.getElementById("teamBButton")
-.classList.remove(
-"selected",
-"disabled-team"
-);
-
-document
-.getElementById("joinRoomInfo")
-.textContent=
-"Checking available room...";
-
-document
-.getElementById("joinModal")
-.classList.remove("hidden");
-
-try{
-
-await initFirebase();
-
-waitingRoom=
-await findWaitingRoom(amount);
-
-if(waitingRoom){
-
-document
-.getElementById("joinRoomInfo")
-.textContent=
-"A player is already waiting. Choose the opposite team.";
-
-}else{
-
-document
-.getElementById("joinRoomInfo")
-.textContent=
-"No waiting player. You will create a new room.";
-
-}
-
-}catch(error){
-
-console.error(error);
-
-document
-.getElementById("joinRoomInfo")
-.textContent=
-"Could not check room.";
-
-}
-
+async function openJoinModal(amount,prize,roomId=null,roomNumber=null){
+ if(selectedMatch && matchHasStarted(selectedMatch)){alert("🔒 This match has already started. H2H joining is closed.");return;}
+ if(!currentUser){alert("Please login first.");showLogin();return;}
+ selectedAmount=amount; selectedPrize=prize; selectedTeam=null; waitingRoom=null;
+ window.selectedRoomId=roomId; window.selectedRoomNumber=roomNumber;
+ document.getElementById("joinAmount").textContent="₹"+money(amount);
+ document.getElementById("joinPrize").textContent="₹"+money(prize);
+ document.getElementById("teamAButton").textContent=selectedMatch.teamA;
+ document.getElementById("teamBButton").textContent=selectedMatch.teamB;
+ document.getElementById("teamAButton").disabled=false; document.getElementById("teamBButton").disabled=false;
+ document.getElementById("teamAButton").classList.remove("selected","disabled-team"); document.getElementById("teamBButton").classList.remove("selected","disabled-team");
+ document.getElementById("confirmJoinButton").disabled=false;
+ document.getElementById("joinRoomInfo").textContent="Checking Room "+(roomNumber||"")+"...";
+ document.getElementById("joinModal").classList.remove("hidden");
+ try{
+  await initFirebase();
+  waitingRoom=await findRoomForJoin(amount,roomId);
+  if(waitingRoom){
+   const a=waitingRoom.player1Team==="A" || waitingRoom.player2Team==="A";
+   const b=waitingRoom.player1Team==="B" || waitingRoom.player2Team==="B";
+   const full=waitingRoom.status==="full" || (waitingRoom.playerCount||0)>=2;
+   document.getElementById("teamAButton").disabled=a; document.getElementById("teamBButton").disabled=b;
+   document.getElementById("teamAButton").classList.toggle("disabled-team",a); document.getElementById("teamBButton").classList.toggle("disabled-team",b);
+   if(full){document.getElementById("joinRoomInfo").textContent="🔒 Room "+(roomNumber||"")+" is full. Please choose the other room.";document.getElementById("confirmJoinButton").disabled=true;}
+   else if(a && b){document.getElementById("joinRoomInfo").textContent="🔒 Both teams are already selected in this room.";document.getElementById("confirmJoinButton").disabled=true;}
+   else document.getElementById("joinRoomInfo").textContent="Room "+(roomNumber||"")+" has 1 player. Choose the available team.";
+  }else{
+   document.getElementById("joinRoomInfo").textContent="Room "+(roomNumber||"")+" is empty. Choose either team.";
+  }
+ }catch(error){console.error(error);document.getElementById("joinRoomInfo").textContent="Could not check room.";}
 }
 
 
 function selectTeam(team){
-
-selectedTeam=team;
-
-document
-.getElementById("teamAButton")
-.classList.toggle(
-"selected",
-team==="A"
-);
-
-document
-.getElementById("teamBButton")
-.classList.toggle(
-"selected",
-team==="B"
-);
-
-if(waitingRoom){
-
-document
-.getElementById("teamAButton")
-.classList.toggle(
-"disabled-team",
-waitingRoom.player1Team==="A"
-);
-
-document
-.getElementById("teamBButton")
-.classList.toggle(
-"disabled-team",
-waitingRoom.player1Team==="B"
-);
-
-}
-
+ const button=team==="A"?document.getElementById("teamAButton"):document.getElementById("teamBButton");
+ if(button.disabled)return;
+ selectedTeam=team;
+ document.getElementById("teamAButton").classList.toggle("selected",team==="A");
+ document.getElementById("teamBButton").classList.toggle("selected",team==="B");
 }
 
 
@@ -2654,6 +2521,8 @@ selectedAmount=null;
 selectedPrize=null;
 selectedTeam=null;
 waitingRoom=null;
+window.selectedRoomId=null;
+window.selectedRoomNumber=null;
 
 }
 
@@ -2710,365 +2579,51 @@ JOIN H2H
 ===================================================== */
 
 async function confirmJoin(){
-
-const button=
-document
-.getElementById("confirmJoinButton");
-
-if(!currentUser){
-
-alert("Please login first.");
-
-return;
-
-}
-
-if(!selectedMatch){
-
-alert("Please select a match.");
-
-return;
-
-}
-
-if(matchHasStarted(selectedMatch)){
-
-alert("🔒 This match has already started. H2H joining is closed.");
-
-return;
-
-}
-
-if(!selectedAmount){
-
-alert("Please select a contest.");
-
-return;
-
-}
-
-if(!selectedTeam){
-
-alert("Please select your team.");
-
-return;
-
-}
-
-button.disabled=true;
-button.textContent="Joining...";
-
-try{
-
-await initFirebase();
-
-const {
-doc,
-collection,
-runTransaction,
-writeBatch,
-serverTimestamp,
-arrayUnion
-}=
-window.firestoreFunctions;
-
-if(
-await playerAlreadyHasRoom()
-){
-
-throw new Error(
-"You already have an H2H room for this match and category."
-);
-
-}
-
-const waiting=
-await findWaitingRoom(
-selectedAmount
-);
-
-
-if(waiting){
-
-if(
-waiting.player1Team===
-selectedTeam
-){
-
-throw new Error(
-"You cannot select the same team as the waiting player."
-);
-
-}
-
-
-await runTransaction(
-
-db,
-
-async transaction=>{
-
-const roomRef=
-doc(
-db,
-"rooms",
-waiting.id
-);
-
-const roomSnap=
-await transaction.get(
-roomRef
-);
-
-if(!roomSnap.exists()){
-
-throw new Error(
-"Room is no longer available."
-);
-
-}
-
-const room=
-roomSnap.data();
-
-if(
-room.status!=="waiting"||
-room.playerCount!==1
-){
-
-throw new Error(
-"This room was just filled. Please try again."
-);
-
-}
-
-if(
-room.player1Team===
-selectedTeam
-){
-
-throw new Error(
-"That team is already selected."
-);
-
-}
-
-const memberRef=
-doc(
-db,
-"rooms",
-waiting.id,
-"members",
-currentUser.uid
-);
-
-transaction.update(
-
-roomRef,
-
-{
-player2Uid:
-currentUser.uid,
-
-player2Team:
-selectedTeam,
-
-playerCount:2,
-
-status:"full",
-
-updatedAt:
-serverTimestamp()
-}
-
-);
-
-transaction.set(
-
-memberRef,
-
-{
-uid:currentUser.uid,
-name:currentPlayer.name,
-phone:currentPlayer.phone,
-team:selectedTeam,
-joinedAt:serverTimestamp()
-}
-
-);
-
-const playerRef=
-doc(
-db,
-"players",
-currentUser.uid
-);
-
-transaction.set(
-
-playerRef,
-
-{
-activeRooms:
-arrayUnion(waiting.id),
-
-updatedAt:
-serverTimestamp()
-
-},
-
-{merge:true}
-
-);
-
-}
-
-);
-
-alert(
-"🎉 H2H joined successfully! The room is now FULL."
-);
-
-}else{
-
-
-/* CREATE ROOM */
-
-const batch=
-writeBatch(db);
-
-const roomRef=
-doc(
-collection(db,"rooms")
-);
-
-const memberRef=
-doc(
-db,
-"rooms",
-roomRef.id,
-"members",
-currentUser.uid
-);
-
-batch.set(
-
-roomRef,
-
-{
-matchId:selectedMatch.id,
-
-amount:selectedAmount,
-
-prize:selectedPrize,
-
-playerCount:1,
-
-status:"waiting",
-
-player1Uid:
-currentUser.uid,
-
-player1Team:
-selectedTeam,
-
-player2Uid:null,
-
-player2Team:null,
-
-winningTeam:null,
-
-winnerSetAt:null,
-
-winnerSetBy:null,
-
-createdAt:
-serverTimestamp(),
-
-updatedAt:
-serverTimestamp()
-
-}
-
-);
-
-
-batch.set(
-
-memberRef,
-
-{
-uid:currentUser.uid,
-
-name:currentPlayer.name,
-
-phone:currentPlayer.phone,
-
-team:selectedTeam,
-
-joinedAt:serverTimestamp()
-
-}
-
-);
-
-
-const playerRef=
-doc(
-db,
-"players",
-currentUser.uid
-);
-
-batch.set(
-
-playerRef,
-
-{
-activeRooms:
-arrayUnion(roomRef.id),
-
-updatedAt:
-serverTimestamp()
-
-},
-
-{merge:true}
-
-);
-
-await batch.commit();
-
-alert(
-"✅ H2H room created. Waiting for Player 2. ⏳"
-);
-
-}
-
-closeJoinModal();
-
-loadMyRooms();
-
-loadCategories();
-
-}catch(error){
-
-console.error(error);
-
-alert(
-"Join failed: "+
-(error.message||
-error.code||
-"Unknown error")
-);
-
-}finally{
-
-button.disabled=false;
-button.textContent="Join H2H";
-
-}
-
+ const button=document.getElementById("confirmJoinButton");
+ if(!currentUser){alert("Please login first.");return;}
+ if(!selectedMatch){alert("Please select a match.");return;}
+ if(matchHasStarted(selectedMatch)){alert("🔒 This match has already started. H2H joining is closed.");return;}
+ if(!selectedAmount){alert("Please select a contest.");return;}
+ if(!selectedTeam){alert("Please select your team.");return;}
+ button.disabled=true; button.textContent="Joining...";
+ try{
+  await initFirebase();
+  const {doc,collection,runTransaction,writeBatch,serverTimestamp,arrayUnion}=window.firestoreFunctions;
+  if(await playerAlreadyHasRoom()) throw new Error("You already have an H2H room for this match and category.");
+  const rooms=await getCategoryRooms(selectedAmount);
+  let targetRoom=null;
+  if(window.selectedRoomId) targetRoom=rooms.find(r=>r.id===window.selectedRoomId)||null;
+  else targetRoom=rooms.find(r=>r.status!=="full" && (r.playerCount||0)<2)||null;
+  if(targetRoom){
+   await runTransaction(db,async transaction=>{
+    const roomRef=doc(db,"rooms",targetRoom.id); const snap=await transaction.get(roomRef);
+    if(!snap.exists()) throw new Error("Room is no longer available.");
+    const room=snap.data();
+    if(room.status==="full" || (room.playerCount||0)>=2) throw new Error("This room is already full. Please choose the other room.");
+    if(room.player1Team===selectedTeam || room.player2Team===selectedTeam) throw new Error("That team is already selected in this room. Choose the other team.");
+    const memberRef=doc(db,"rooms",targetRoom.id,"members",currentUser.uid);
+    const playerRef=doc(db,"players",currentUser.uid);
+    if((room.playerCount||0)===0){
+      transaction.update(roomRef,{player1Uid:currentUser.uid,player1Team:selectedTeam,player2Uid:null,player2Team:null,playerCount:1,status:"waiting",updatedAt:serverTimestamp()});
+    }else{
+      transaction.update(roomRef,{player2Uid:currentUser.uid,player2Team:selectedTeam,playerCount:2,status:"full",updatedAt:serverTimestamp()});
+    }
+    transaction.set(memberRef,{uid:currentUser.uid,name:currentPlayer.name,phone:currentPlayer.phone,team:selectedTeam,joinedAt:serverTimestamp()});
+    transaction.set(playerRef,{activeRooms:arrayUnion(targetRoom.id),updatedAt:serverTimestamp()},{merge:true});
+   });
+   alert(targetRoom.playerCount===0?"✅ Room "+(window.selectedRoomNumber||"")+" created. Waiting for Player 2. ⏳":"🎉 H2H joined successfully! Room "+(window.selectedRoomNumber||"")+" is now FULL.");
+  }else{
+   if(rooms.length>=2) throw new Error("Both rooms are already occupied. Please choose an available team in Room 1 or Room 2.");
+   const roomNumber=rooms.length+1; const batch=writeBatch(db); const roomRef=doc(collection(db,"rooms"));
+   const memberRef=doc(db,"rooms",roomRef.id,"members",currentUser.uid);
+   batch.set(roomRef,{matchId:selectedMatch.id,amount:selectedAmount,prize:selectedPrize,roomNumber:roomNumber,playerCount:1,status:"waiting",player1Uid:currentUser.uid,player1Team:selectedTeam,player2Uid:null,player2Team:null,winningTeam:null,winnerSetAt:null,winnerSetBy:null,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+   batch.set(memberRef,{uid:currentUser.uid,name:currentPlayer.name,phone:currentPlayer.phone,team:selectedTeam,joinedAt:serverTimestamp()});
+   batch.set(doc(db,"players",currentUser.uid),{activeRooms:arrayUnion(roomRef.id),updatedAt:serverTimestamp()},{merge:true});
+   await batch.commit(); alert("✅ Room "+roomNumber+" created. Waiting for Player 2. ⏳");
+  }
+  closeJoinModal(); loadMyRooms(); loadCategories();
+ }catch(error){console.error(error);alert("Join failed: "+(error.message||error.code||"Unknown error"));}
+ finally{button.disabled=false;button.textContent="Join H2H";}
 }
 
 
