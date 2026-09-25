@@ -8,6 +8,12 @@
 <style>
 *{box-sizing:border-box}
 
+html,body{
+  width:100%;
+  min-height:100%;
+  overflow-x:hidden;
+}
+
 body{
   margin:0;
   font-family:Arial,sans-serif;
@@ -61,9 +67,10 @@ button{
 }
 
 .container{
-  max-width:1000px;
-  margin:auto;
-  padding:14px;
+  width:100%;
+  max-width:1200px;
+  margin:0 auto;
+  padding:12px;
 }
 
 .card{
@@ -228,8 +235,72 @@ input,select{
 
 .category-grid{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
+  grid-template-columns:1fr;
+  gap:14px;
+  margin-top:12px;
+  width:100%;
+}
+
+.category-rooms{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-top:12px;
+}
+
+.room-card{
+  border:2px solid #e2e8f0;
+  border-radius:16px;
+  padding:14px;
+  background:#ffffff;
+  min-width:0;
+}
+
+.room-card.waiting-room{
+  border-color:#f59e0b;
+  background:#fffbeb;
+}
+
+.room-card.full-room{
+  border-color:#22c55e;
+  background:#f0fdf4;
+}
+
+.room-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.team-status{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:10px;
+  border-radius:10px;
+  background:#f8fafc;
+  margin-top:8px;
+  font-weight:800;
+}
+
+.team-status.selected{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.next-room-note{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:#eff6ff;
+  color:#1d4ed8;
+  font-weight:700;
+}
+
+.category-action{
   margin-top:12px;
 }
 
@@ -461,38 +532,6 @@ hr{
   font-size:32px;
 }
 
-.match-status{
-margin:10px 0 18px;
-padding:11px 14px;
-border-radius:12px;
-font-weight:800;
-text-align:center;
-}
-
-.match-status.open{
-background:#ecfdf5;
-color:#047857;
-border:1px solid #a7f3d0;
-}
-
-.match-status.closed{
-background:#fef2f2;
-color:#b91c1c;
-border:1px solid #fecaca;
-}
-
-.match-closed{
-width:100%;
-box-sizing:border-box;
-padding:13px 10px;
-border-radius:12px;
-background:#fef2f2;
-color:#b91c1c;
-border:1px solid #fecaca;
-font-weight:800;
-text-align:center;
-}
-
 .winner-box{
   background:#dcfce7;
   border:2px solid #86efac;
@@ -511,25 +550,17 @@ text-align:center;
   margin-top:12px;
 }
 
-/* CHAT */
-.chat-btn{background:#7c3aed;color:white;margin-top:8px}
-.chat-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:14px;z-index:100}
-.chat-box{background:white;width:100%;max-width:520px;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.chat-head{background:#07111f;color:white;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.chat-head strong{font-size:18px}
-.chat-close{width:auto;margin:0;background:#334155;color:white;padding:8px 12px;border-radius:9px}
-.chat-messages{height:380px;overflow-y:auto;padding:14px;background:#f4f7fb}
-.chat-message{max-width:82%;padding:10px 12px;border-radius:14px;margin:8px 0;line-height:1.35;word-break:break-word}
-.chat-message.me{margin-left:auto;background:#dbeafe}
-.chat-message.them{margin-right:auto;background:white;border:1px solid #e2e8f0}
-.chat-meta{font-size:11px;color:#64748b;margin-top:4px}
-.chat-compose{display:flex;gap:8px;padding:12px;border-top:1px solid #e2e8f0;background:white}
-.chat-compose input{margin:0;flex:1}
-.chat-send{width:auto;margin:0;background:#2563eb;color:white;padding:12px 16px}
-.chat-empty{text-align:center;color:#64748b;padding:50px 10px}
-.chat-launch{background:#7c3aed;color:white}
-
 @media(max-width:650px){
+  .container{padding:8px;}
+  .card{padding:14px;}
+  .category-rooms{grid-template-columns:1fr;}
+  .hero{min-height:360px;}
+  .hero-copy{max-width:62%;padding:20px 14px;}
+  .hero-photo{width:60%;right:-12px;}
+  .hero h1{font-size:28px;}
+  .modal{padding:8px;}
+  .modal-box{max-width:none;width:100%;max-height:94vh;border-radius:16px;padding:16px;}
+
   .hero{min-height:330px}
   .hero-copy{
     max-width:70%;
@@ -547,7 +578,7 @@ text-align:center;
 
 @media(max-width:430px){
   .category-grid{
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:1fr;
   }
   .teams{font-size:19px}
   .brand{font-size:21px}
@@ -556,199 +587,57 @@ text-align:center;
   }
 }
 
-/* ===== DREAM PLAY PRO THEME ===== */
-:root{
-  --dp-navy:#06111f;
-  --dp-blue:#2563eb;
-  --dp-sky:#38bdf8;
-  --dp-purple:#7c3aed;
-  --dp-text:#0f172a;
-  --dp-muted:#64748b;
-  --dp-line:#e2e8f0;
-}
-body{
-  background:
-    radial-gradient(circle at 8% 4%,rgba(56,189,248,.13),transparent 28%),
-    radial-gradient(circle at 92% 10%,rgba(124,58,237,.10),transparent 30%),
-    #f5f7fb;
-}
-.topbar{
-  background:rgba(6,17,31,.94);
-  backdrop-filter:blur(16px);
-  border-bottom:1px solid rgba(255,255,255,.08);
-  padding:12px 16px;
-}
-.brand{letter-spacing:.5px;text-shadow:0 3px 18px rgba(56,189,248,.22)}
-.top-actions .btn-dark{
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.08);
-  padding:10px 14px;
-  width:auto;
-  margin:0;
-}
-.container{padding:18px 14px 40px}
-.hero{
-  min-height:340px;
-  border:1px solid rgba(255,255,255,.12);
-  background:
-    radial-gradient(circle at 78% 30%,rgba(56,189,248,.30),transparent 24%),
-    radial-gradient(circle at 15% 90%,rgba(124,58,237,.32),transparent 28%),
-    linear-gradient(135deg,#050b16 0%,#0b1d36 52%,#123a69 100%);
-  box-shadow:0 22px 60px rgba(15,23,42,.24);
-}
-.hero:after{
-  content:"";
-  position:absolute;
-  inset:auto -10% -55% 35%;
-  height:260px;
-  background:rgba(56,189,248,.12);
-  filter:blur(35px);
-  border-radius:50%;
-}
-.hero-copy{padding:34px 22px;max-width:62%}
-.hero h1{font-size:40px;line-height:1.05;letter-spacing:-1px}
-.hero p{font-size:15px}
-.pill{background:rgba(56,189,248,.12);border-color:rgba(125,211,252,.34)}
-.hero .btn-blue{
-  background:linear-gradient(135deg,#3b82f6,#7c3aed);
-  box-shadow:0 10px 25px rgba(37,99,235,.32);
-}
-.hero-photo{z-index:1;width:49%}
-.hero-photo img{filter:drop-shadow(0 18px 30px rgba(0,0,0,.5))}
-.home-intro{
-  display:grid;
-  grid-template-columns:1.2fr .8fr;
+/* ===== FINAL MOBILE / PLAYER ROOM CLEANUP ===== */
+.category-grid{
+  grid-template-columns:1fr;
   gap:12px;
-  margin:14px 0;
 }
-.pro-card{
-  background:rgba(255,255,255,.88);
-  border:1px solid rgba(226,232,240,.9);
-  box-shadow:0 12px 35px rgba(15,23,42,.07);
-  border-radius:18px;
-  padding:18px;
+.category{
+  width:100%;
 }
-.pro-card h3{margin:0 0 6px}
-.pro-card p{margin:0;color:var(--dp-muted);font-size:13px;line-height:1.55}
-.pro-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  background:linear-gradient(135deg,#eff6ff,#f5f3ff);
-  color:#4338ca;border:1px solid #dbeafe;
-  border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900;
+.room-card{
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:12px;
+  margin-top:10px;
+  background:#fff;
 }
-.feature-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
-.feature-mini{padding:14px;border-radius:16px;background:white;border:1px solid var(--dp-line);box-shadow:0 8px 24px rgba(15,23,42,.05)}
-.feature-mini strong{display:block;font-size:13px;margin-bottom:3px}.feature-mini span{font-size:11px;color:var(--dp-muted)}
-.sport-card{position:relative;overflow:hidden;min-height:135px;border:1px solid rgba(255,255,255,.12);box-shadow:0 12px 28px rgba(15,23,42,.12)}
-.sport-card:after{content:"";position:absolute;width:90px;height:90px;right:-25px;bottom:-25px;background:rgba(255,255,255,.10);border-radius:50%}
-.sport-icon{position:relative;z-index:1}.sport-card h3,.sport-card p{position:relative;z-index:1}
-.card{border:1px solid rgba(226,232,240,.9);box-shadow:0 10px 30px rgba(15,23,42,.06)}
-.card h2{letter-spacing:-.3px}
-.btn-blue{background:linear-gradient(135deg,#2563eb,#4f46e5);box-shadow:0 7px 18px rgba(37,99,235,.18)}
-button{transition:transform .15s ease,box-shadow .15s ease,filter .15s ease}
-button:hover{transform:translateY(-1px);filter:brightness(1.03)}
-@media(max-width:650px){
-  .home-intro{grid-template-columns:1fr}
-  .feature-row{grid-template-columns:1fr 1fr 1fr}
-  .hero{min-height:335px}
-  .hero-copy{max-width:72%;padding:25px 17px}
-  .hero h1{font-size:32px}
+.room-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
 }
+.team-status{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:10px 12px;
+  margin-top:7px;
+  border-radius:10px;
+  background:#f0fdf4;
+  border:1px solid #bbf7d0;
+  color:#166534;
+  font-size:14px;
+  font-weight:800;
+}
+.team-status.selected{
+  background:#f1f5f9;
+  border-color:#cbd5e1;
+  color:#64748b;
+}
+.team-status strong{font-size:11px}
 @media(max-width:430px){
-  .feature-row{gap:7px}.feature-mini{padding:11px 9px}
-  .feature-mini strong{font-size:11px}.feature-mini span{font-size:10px}
+  .container{padding:12px 10px 30px}
+  .category-grid{grid-template-columns:1fr}
+  .category{padding:13px}
+  .category strong{font-size:21px}
+  .room-card{padding:10px}
+  .hero-photo img{height:99%;width:auto;max-width:100%;object-fit:contain}
 }
 
-
-/* ===== DREAM PLAY FINAL STADIUM VISUAL ===== */
-.home-intro{display:none !important}
-
-.stadium-hero{
-  min-height:390px;
-  background:
-    radial-gradient(circle at 75% 25%,rgba(0,211,255,.34),transparent 22%),
-    radial-gradient(circle at 18% 90%,rgba(116,42,255,.42),transparent 30%),
-    linear-gradient(135deg,#020b17 0%,#05213b 50%,#063c5e 100%);
-  border:1px solid rgba(56,189,248,.38);
-  box-shadow:0 22px 55px rgba(2,12,27,.34);
-}
-.stadium-hero:before{
-  content:"";position:absolute;inset:0;pointer-events:none;opacity:.65;
-  background:
-    linear-gradient(76deg,transparent 0 48%,rgba(255,255,255,.05) 49%,transparent 50%),
-    linear-gradient(105deg,transparent 0 63%,rgba(255,255,255,.045) 64%,transparent 65%);
-}
-.hero-copy{z-index:5;max-width:58%;padding:34px 20px 28px}
-.hero h1{color:#fff;font-size:38px;letter-spacing:-1px;text-shadow:0 5px 22px rgba(0,0,0,.32)}
-.hero p{color:#c9dced}
-.hero .btn-blue{
-  background:linear-gradient(135deg,#087dff,#4f46e5 58%,#8b2be2);
-  box-shadow:0 12px 30px rgba(37,99,235,.36);
-}
-.hero-tagline{margin-top:20px;color:#8fdcff;font-size:10px;font-weight:900;letter-spacing:3px}
-.hero-photo{z-index:4;right:-1%;bottom:0;width:54%;height:100%;align-items:flex-end;pointer-events:none}
-.hero-photo img{
-  display:block !important;visibility:visible !important;opacity:1 !important;
-  height:108%;width:auto;max-width:100%;object-fit:contain;
-  filter:drop-shadow(0 22px 26px rgba(0,0,0,.62));
-}
-.photo-halo{
-  position:absolute;width:280px;height:280px;right:18%;bottom:4%;
-  border-radius:50%;background:radial-gradient(circle,rgba(20,196,255,.34),transparent 66%);
-  filter:blur(8px);
-}
-.stadium-glow{position:absolute;border-radius:50%;filter:blur(25px);pointer-events:none}
-.glow-one{width:160px;height:160px;right:38%;top:-80px;background:rgba(255,255,255,.12)}
-.glow-two{width:190px;height:190px;left:-90px;bottom:-110px;background:rgba(123,44,255,.32)}
-.stadium-lights{
-  position:absolute;left:0;right:0;bottom:0;height:70px;pointer-events:none;opacity:.5;
-  background:
-    radial-gradient(circle at 12% 20%,rgba(255,255,255,.9) 0 2px,transparent 3px),
-    radial-gradient(circle at 22% 28%,rgba(255,255,255,.75) 0 2px,transparent 3px),
-    radial-gradient(circle at 76% 22%,rgba(255,255,255,.8) 0 2px,transparent 3px),
-    radial-gradient(circle at 88% 30%,rgba(255,255,255,.9) 0 2px,transparent 3px),
-    linear-gradient(180deg,transparent,#03101f);
-}
-.feature-mini{
-  background:linear-gradient(145deg,#06182b,#0a2a47);
-  color:#fff;border:1px solid rgba(56,189,248,.24);
-  box-shadow:0 12px 28px rgba(2,12,27,.14);
-}
-.feature-mini span{color:#9db9cf}
-@media(max-width:650px){
-  .stadium-hero{min-height:390px}
-  .hero-copy{max-width:66%;padding:28px 16px}
-  .hero h1{font-size:34px}
-  .hero-photo{width:57%;right:-7%}
-  .hero-photo img{height:102%}
-  .photo-halo{right:12%;bottom:4%;width:210px;height:210px}
-}
-@media(max-width:430px){
-  .stadium-hero{min-height:370px}
-  .hero-copy{max-width:70%;padding:25px 15px}
-  .hero h1{font-size:31px}
-  .hero-photo{width:56%;right:-9%}
-  .hero-photo img{height:99%}
-  .hero-tagline{font-size:9px;letter-spacing:2px}
-}
-
-
-/* ===== TWO-ROOM H2H DISPLAY ===== */
-.category{padding:14px;overflow:hidden}
-.category-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-.category-head strong{font-size:21px}
-.room-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.h2h-room-card{border:1px solid #dbe3ee;border-radius:14px;padding:11px;background:linear-gradient(180deg,#f8fbff,#fff)}
-.h2h-room-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}
-.h2h-room-title{font-size:15px;font-weight:900}.h2h-count{font-size:11px;font-weight:900;color:#475569;white-space:nowrap}
-.team-status{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px;border-radius:10px;margin-top:6px;font-size:12px;font-weight:800}
-.team-status.available{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0}
-.team-status.selected{background:#fff1f2;color:#b91c1c;border:1px solid #fecdd3}
-.team-status .team-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.team-status .team-state{white-space:nowrap;font-size:10px}
-.room-join-btn{margin-top:9px;padding:11px 8px;font-size:13px}.room-join-btn:disabled{cursor:not-allowed;opacity:.55;transform:none;filter:none}
-.category-info{margin-top:10px;padding:10px 11px;border-radius:11px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:12px;line-height:1.45}
-@media(max-width:430px){.room-grid{gap:7px}.h2h-room-card{padding:8px}.h2h-room-title{font-size:13px}.h2h-count{font-size:10px}.team-status{padding:7px 6px;font-size:10px}.team-status .team-state{font-size:8px}.room-join-btn{font-size:11px;padding:10px 5px}}
 </style>
 </head>
 
@@ -776,29 +665,35 @@ onclick="showAdminLogin()">⚙️ Admin</button>
 
 <div id="loginPage">
 
-<div class="hero stadium-hero">
-  <div class="stadium-glow glow-one"></div>
-  <div class="stadium-glow glow-two"></div>
+<div class="hero">
 
-  <div class="hero-copy">
-    <span class="pill">🏏 CRICKET • ⚽ FOOTBALL</span>
-    <h1>Play your H2H.</h1>
-    <p>Choose a match, pick your team and join your private H2H room.</p>
-    <button type="button" class="btn-blue" onclick="focusLogin()">🚀 Enter Dream Play</button>
-    <div class="hero-tagline">PASSION • FAMILY • FUN</div>
-  </div>
+<div class="hero-copy">
 
-  <div class="hero-photo">
-    <div class="photo-halo"></div>
-    <img src="sanj.png" alt="Sanj">
-  </div>
+<span class="pill">
+🏏 CRICKET • ⚽ FOOTBALL
+</span>
 
-  <div class="stadium-lights"></div>
+<h1>Play your H2H.</h1>
+
+<p>
+Choose a match, pick your team and join a private family H2H room.
+</p>
+
+<button
+type="button"
+class="btn-blue"
+onclick="focusLogin()">
+🚀 Enter Dream Play
+</button>
+
 </div>
-<div class="feature-row">
-  <div class="feature-mini"><strong>⚡ Live Rooms</strong><span>Instant H2H updates</span></div>
-  <div class="feature-mini"><strong>💬 Live Chat</strong><span>Private admin contact</span></div>
-  <div class="feature-mini"><strong>🏆 Results</strong><span>Winner updates</span></div>
+
+<div class="hero-photo">
+<img src="sanj.png"
+alt="Dream Play"
+onerror="this.style.display='none'">
+</div>
+
 </div>
 
 <div class="sports">
@@ -909,24 +804,6 @@ Logout
 
 </div>
 
-<div class="card">
-<h3>📱 WhatsApp Admin</h3>
-<p class="small">Need help with Dream Play? Contact the admin directly on WhatsApp.</p>
-<a
-  class="contact-admin"
-  href="#"
-  onclick="contactAdmin(); return false;"
-  style="display:flex;text-decoration:none;cursor:pointer;align-items:center;gap:12px;"
->
-  <div class="contact-icon">📱</div>
-  <div class="contact-text">
-    <strong>Contact Admin on WhatsApp</strong>
-    <span>Open WhatsApp and send a message</span>
-  </div>
-  <div class="contact-arrow">›</div>
-</a>
-</div>
-
 <div class="hero">
 
 <div class="hero-copy">
@@ -946,7 +823,7 @@ Pick your side. Join your H2H. Follow the result.
 <div class="hero-photo">
 <img src="sanj.png"
 alt="Dream Play"
->
+onerror="this.style.display='none'">
 </div>
 
 </div>
@@ -1312,6 +1189,7 @@ Join H2H
 </div>
 </div>
 
+
 <script>
 
 /* =====================================================
@@ -1349,23 +1227,20 @@ const ADMIN_UID=
 const ADMIN_WHATSAPP=
 "917593011528";
 
+
 let firebaseApp=null;
 let auth=null;
 let db=null;
-let messaging=null;
 let firebaseReady=false;
-  
+
 let currentUser=null;
 let currentPlayer=null;
+
 let selectedMatch=null;
 let selectedAmount=null;
 let selectedPrize=null;
 let selectedTeam=null;
 let waitingRoom=null;
-let chatUnsubscribe=null;
-let activeChatId=null;
-let activeChatPlayerUid=null;
-let activeChatMode=null;
 
 
 const CONTESTS=[
@@ -1402,20 +1277,21 @@ const firestoreModule=
 await import(
 "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js"
 );
-const messagingModule=
-await import(
-"https://www.gstatic.com/firebasejs/11.0.2/firebase-messaging.js"
-);
+
 firebaseApp=
 appModule.initializeApp(FIREBASE_CONFIG);
 
 auth=
 authModule.getAuth(firebaseApp);
 
+await authModule.setPersistence(
+  auth,
+  authModule.browserLocalPersistence
+);
+
 db=
 firestoreModule.getFirestore(firebaseApp);
-messaging=
-messagingModule.getMessaging(firebaseApp);
+
 window.firebaseFunctions={
 
 signInWithEmailAndPassword:
@@ -1425,13 +1301,7 @@ createUserWithEmailAndPassword:
 authModule.createUserWithEmailAndPassword,
 
 signOut:
-authModule.signOut,
-
-onAuthStateChanged:
-authModule.onAuthStateChanged,
-
-getToken:
-messagingModule.getToken
+authModule.signOut
 
 };
 
@@ -1441,82 +1311,7 @@ firestoreModule;
 firebaseReady=true;
 
 }
-/* =====================================================
-FCM ADMIN NOTIFICATIONS
-===================================================== */
 
-const FCM_VAPID_KEY =
-"BA80bWVpfKUNCSdNt1_gmvhhXEA-C4J86fnjk3S_JNpONjhC76cxJ-rf9HcO6onxBOp5o2TMYkisgy74s67kq-g";
-
-async function enableAdminNotifications(){
-
-if(!currentUser)return;
-
-if(currentUser.uid!==ADMIN_UID)return;
-
-try{
-
-const permission=
-await Notification.requestPermission();
-
-if(permission!=="granted"){
-
-console.log("Notification permission not granted.");
-
-return;
-
-}
-
-const serviceWorkerRegistration =
-  await navigator.serviceWorker.register(
-    "/Dream-play-/firebase-messaging-sw.js"
-  );
-
-const token =
-  await window.firebaseFunctions.getToken(
-    messaging,
-    {
-      vapidKey: FCM_VAPID_KEY,
-      serviceWorkerRegistration:
-        serviceWorkerRegistration
-    }
-  );
-
-if(!token){
-
-console.log("FCM token not received.");
-
-return;
-
-}
-
-console.log(
-"Dream Play FCM token:",
-token
-);
-await window.firestoreFunctions.setDoc(
-  window.firestoreFunctions.doc(
-    db,
-    "adminNotificationTokens",
-    token
-  ),
-  {
-    token: token,
-    adminUid: currentUser.uid,
-    updatedAt:
-      window.firestoreFunctions.serverTimestamp()
-  }
-);
-}catch(error){
-
-console.error(
-"FCM notification setup failed:",
-error
-);
-
-}
-
-  }
 
 /* =====================================================
 HELPERS
@@ -1718,18 +1513,9 @@ PLAYER LOGIN
 
 function focusLogin(){
 
-const loginPage=document.getElementById("loginPage");
-const loginName=document.getElementById("loginName");
-
-if(loginPage){
-loginPage.scrollIntoView({behavior:"smooth",block:"start"});
-}
-
-setTimeout(function(){
-if(loginName){
-loginName.focus();
-}
-},350);
+document
+.getElementById("loginName")
+.focus();
 
 }
 
@@ -1763,20 +1549,10 @@ return;
 
 }
 
-if(!/^[6-9][0-9]{9}$/.test(phone)){
+if(phone.length!==10){
 
 message.textContent=
-"Please enter a valid Indian mobile number (10 digits starting with 6, 7, 8 or 9).";
-
-return;
-
-}
-
-// Reject obvious placeholder/fake numbers such as 9999999999.
-if(/^([0-9])\1{9}$/.test(phone)){
-
-message.textContent=
-"Please enter your real mobile number.";
+"Please enter a valid 10-digit phone number.";
 
 return;
 
@@ -1791,18 +1567,9 @@ await initFirebase();
 
 const {
 signInWithEmailAndPassword,
-createUserWithEmailAndPassword,
-signOut
+createUserWithEmailAndPassword
 }=
 window.firebaseFunctions;
-
-if(auth.currentUser){
-
-try{
-await signOut(auth);
-}catch(e){}
-
-}
 
 const email=
 playerEmail(phone);
@@ -1919,7 +1686,6 @@ console.error(error);
 
 }
 
-closeChat();
 currentUser=null;
 currentPlayer=null;
 selectedMatch=null;
@@ -1998,14 +1764,10 @@ credential.user;
 
 showAdminPage();
 
-enableAdminNotifications().catch(err => {
-  console.error("FCM notification setup failed:", err);
-});
-
 }catch(error){
 
 console.error(error);
-  
+
 message.textContent=
 "Admin login failed: "+
 (error.message||
@@ -2031,7 +1793,6 @@ await window
 
 }catch(error){}
 
-closeChat();
 currentUser=null;
 
 showLogin();
@@ -2334,17 +2095,6 @@ selectedMatch.date,
 selectedMatch.time
 );
 
-const oldMatchStatus=document.getElementById("matchStatusBox");
-if(oldMatchStatus)oldMatchStatus.remove();
-
-const statusBox=document.getElementById("detailTime");
-if(statusBox){
-statusBox.insertAdjacentHTML(
-"afterend",
-`<div id="matchStatusBox" class="match-status ${matchHasStarted(selectedMatch)?"closed":"open"}">${matchStatusText(selectedMatch)}</div>`
-);
-}
-
 document
 .getElementById("detailTeamA")
 .textContent=
@@ -2380,134 +2130,373 @@ showPlayerPage();
 }
 
 
-function matchHasStarted(match){
-
-if(!match || !match.date)return false;
-
-const start=new Date(
-match.date+"T"+(match.time||"00:00")
-);
-
-if(Number.isNaN(start.getTime()))return false;
-
-return Date.now() >= start.getTime();
-
-}
-
-function matchStatusText(match){
-
-return matchHasStarted(match)
-?"🔒 Match started — H2H joining is closed."
-:"🟢 H2H joining is open.";
-
-}
-
-
 /* =====================================================
 CATEGORIES
 ===================================================== */
 
 async function loadCategories(){
-const box=document.getElementById("categories");
-box.innerHTML="<div class=\"empty\">Loading H2H rooms...</div>";
-if(!selectedMatch){box.innerHTML='<div class="warning">Match not selected.</div>';return;}
-if(matchHasStarted(selectedMatch)){
- box.innerHTML=CONTESTS.map(c=>`<div class="category"><div class="category-head"><strong>₹${money(c.amount)}</strong><div class="prize">Winning value ₹${money(c.prize)}</div></div><div class="match-closed">🔒 Match started — Joining closed</div></div>`).join("");
- return;
-}
+
+const box=
+document.getElementById("categories");
+
+box.innerHTML="Loading...";
+
 try{
- await initFirebase();
- const {collection,getDocs,query,where}=window.firestoreFunctions;
- const snapshot=await getDocs(query(collection(db,"rooms"),where("matchId","==",selectedMatch.id)));
- const byAmount={}; CONTESTS.forEach(c=>byAmount[c.amount]=[]);
- snapshot.forEach(item=>{const room={id:item.id,...item.data()}; if(byAmount[room.amount] && byAmount[room.amount].length<2) byAmount[room.amount].push(room);});
- box.innerHTML=CONTESTS.map(c=>renderCategoryWithTwoRooms(c,byAmount[c.amount][0]||null,byAmount[c.amount][1]||null)).join("");
-}catch(error){console.error(error);box.innerHTML='<div class="warning">Could not load H2H rooms.</div>';}
+
+await initFirebase();
+
+const {
+collection,
+getDocs,
+query,
+where
+}=
+window.firestoreFunctions;
+
+const snapshot=await getDocs(
+query(
+collection(db,"rooms"),
+where("matchId","==",selectedMatch.id)
+)
+);
+
+const allRooms=[];
+
+snapshot.forEach(item=>{
+
+allRooms.push({
+ id:item.id,
+ ...item.data()
+});
+
+});
+
+box.innerHTML=CONTESTS.map(contest=>{
+
+const waitingRooms=allRooms
+.filter(room=>
+Number(room.amount)===Number(contest.amount)
+&& room.status==="waiting"
+&& Number(room.playerCount||1)===1
+)
+.sort((a,b)=>{
+const at=a.createdAt?.seconds||0;
+const bt=b.createdAt?.seconds||0;
+return at-bt;
+});
+
+const room=waitingRooms[0];
+
+let content="";
+
+if(room){
+
+const teamASelected=room.player1Team==="A";
+const teamBSelected=room.player1Team==="B";
+
+content=`
+<div class="room-card waiting-room">
+
+<div class="room-title">
+<strong>WAITING ROOM</strong>
+<span class="badge waiting">1/2</span>
+</div>
+
+<div class="team-status ${teamASelected?"selected":""}">
+<span>🏏 ${escapeHtml(selectedMatch.teamA)}</span>
+<strong>${teamASelected?"ALREADY SELECTED 🔒":"AVAILABLE"}</strong>
+</div>
+
+<div class="team-status ${teamBSelected?"selected":""}">
+<span>🏏 ${escapeHtml(selectedMatch.teamB)}</span>
+<strong>${teamBSelected?"ALREADY SELECTED 🔒":"AVAILABLE"}</strong>
+</div>
+
+<button type="button" class="btn-blue"
+onclick="openJoinModal(${contest.amount},${contest.prize},'${room.id}')">
+Join Waiting Room
+</button>
+
+</div>
+`;
+
+}else{
+
+content=`
+<div class="empty" style="padding:10px 4px">
+No waiting room. Create the next room.
+</div>
+
+<button type="button" class="btn-blue"
+onclick="openJoinModal(${contest.amount},${contest.prize})">
+➕ Join ₹${money(contest.amount)}
+</button>
+`;
+
 }
 
-function renderCategoryWithTwoRooms(contest,room1,room2){
- return `<div class="category"><div class="category-head"><strong>₹${money(contest.amount)}</strong><div class="prize">Winning value ₹${money(contest.prize)}</div></div><div class="room-grid">${renderH2HRoomCard(contest,room1,1)}${renderH2HRoomCard(contest,room2,2)}</div><div class="category-info">ℹ️ <strong>Only 2 rooms.</strong> Each room has 2 players. Each team can be selected by only 1 player per room. The same team can be selected once in Room 1 and once in Room 2.</div></div>`;
+return`
+<div class="category">
+<strong>₹${money(contest.amount)}</strong>
+<div class="prize">Display value ₹${money(contest.prize)}</div>
+${content}
+</div>
+`;
+
+}).join("");
+
+}catch(error){
+
+console.error(error);
+box.innerHTML='<div class="warning">Could not load H2H rooms.</div>';
+
 }
 
-function renderH2HRoomCard(contest,room,roomNumber){
- const teamA=selectedMatch.teamA, teamB=selectedMatch.teamB;
- if(!room){
-  return `<div class="h2h-room-card"><div class="h2h-room-head"><span class="h2h-room-title">Room ${roomNumber}</span><span class="h2h-count">👥 0/2</span></div><div class="team-status available"><span class="team-name">🟢 ${escapeHtml(teamA)}</span><span class="team-state">AVAILABLE</span></div><div class="team-status available"><span class="team-name">🟢 ${escapeHtml(teamB)}</span><span class="team-state">AVAILABLE</span></div><button type="button" class="btn-blue room-join-btn" onclick="openJoinModal(${contest.amount},${contest.prize},null,${roomNumber})">Join Room ${roomNumber} →</button></div>`;
- }
- const full=room.status==="full" || (room.playerCount||0)>=2;
- const a=room.player1Team==="A" || room.player2Team==="A";
- const b=room.player1Team==="B" || room.player2Team==="B";
- let action;
- if(full) action='<button type="button" class="btn-gray room-join-btn" disabled>🔒 Room Full</button>';
- else if(room.player1Uid===currentUser?.uid || room.player2Uid===currentUser?.uid) action='<button type="button" class="btn-gray room-join-btn" disabled>⏳ You are in this room</button>';
- else action=`<button type="button" class="btn-blue room-join-btn" onclick="openJoinModal(${contest.amount},${contest.prize},'${room.id}',${roomNumber})">Join Room ${roomNumber} →</button>`;
- return `<div class="h2h-room-card"><div class="h2h-room-head"><span class="h2h-room-title">Room ${roomNumber}</span><span class="h2h-count">👥 ${full?'2/2':'1/2'}</span></div><div class="team-status ${a?'selected':'available'}"><span class="team-name">${a?'🔒':'🟢'} ${escapeHtml(teamA)}</span><span class="team-state">${a?'ALREADY SELECTED':'AVAILABLE'}</span></div><div class="team-status ${b?'selected':'available'}"><span class="team-name">${b?'🔒':'🟢'} ${escapeHtml(teamB)}</span><span class="team-state">${b?'ALREADY SELECTED':'AVAILABLE'}</span></div>${action}</div>`;
 }
-
 
 /* =====================================================
 FIND WAITING ROOM
 ===================================================== */
 
-async function getCategoryRooms(amount){
- const {collection,getDocs,query,where}=window.firestoreFunctions;
- const snapshot=await getDocs(query(collection(db,"rooms"),where("matchId","==",selectedMatch.id),where("amount","==",amount)));
- const rooms=[]; snapshot.forEach(item=>rooms.push({id:item.id,...item.data()}));
- return rooms.slice(0,2);
+async function findWaitingRoom(amount){
+
+const {
+collection,
+getDocs,
+query,
+where,
+limit
+}=
+window.firestoreFunctions;
+
+const q=
+query(
+
+collection(db,"rooms"),
+
+where(
+"matchId",
+"==",
+selectedMatch.id
+),
+
+where(
+"amount",
+"==",
+amount
+),
+
+where(
+"status",
+"==",
+"waiting"
+),
+
+limit(1)
+
+);
+
+const snapshot=
+await getDocs(q);
+
+if(snapshot.empty){
+
+return null;
+
 }
 
-async function findRoomForJoin(amount,roomId=null){
- const rooms=await getCategoryRooms(amount);
- if(roomId) return rooms.find(room=>room.id===roomId)||null;
- return rooms.find(room=>room.status!=="full" && (room.playerCount||0)<2)||null;
+const item=
+snapshot.docs[0];
+
+return{
+
+id:item.id,
+...item.data()
+
+};
+
 }
 
-async function findWaitingRoom(amount){return findRoomForJoin(amount,null);}
+
+async function getRoomById(roomId){
+
+const {
+doc,
+getDoc
+}=
+window.firestoreFunctions;
+
+const snap=
+await getDoc(
+ doc(db,"rooms",roomId)
+);
+
+if(!snap.exists())return null;
+
+const room={
+id:snap.id,
+...snap.data()
+};
+
+if(room.matchId!==selectedMatch.id)return null;
+if(Number(room.amount)!==Number(selectedAmount))return null;
+if(room.status!=="waiting"||Number(room.playerCount)!==1)return null;
+
+return room;
+
+}
 
 
 /* =====================================================
 JOIN MODAL
 ===================================================== */
 
-async function openJoinModal(amount,prize,roomId=null,roomNumber=null){
- if(selectedMatch && matchHasStarted(selectedMatch)){alert("🔒 This match has already started. H2H joining is closed.");return;}
- if(!currentUser){alert("Please login first.");showLogin();return;}
- selectedAmount=amount; selectedPrize=prize; selectedTeam=null; waitingRoom=null;
- window.selectedRoomId=roomId; window.selectedRoomNumber=roomNumber;
- document.getElementById("joinAmount").textContent="₹"+money(amount);
- document.getElementById("joinPrize").textContent="₹"+money(prize);
- document.getElementById("teamAButton").textContent=selectedMatch.teamA;
- document.getElementById("teamBButton").textContent=selectedMatch.teamB;
- document.getElementById("teamAButton").disabled=false; document.getElementById("teamBButton").disabled=false;
- document.getElementById("teamAButton").classList.remove("selected","disabled-team"); document.getElementById("teamBButton").classList.remove("selected","disabled-team");
- document.getElementById("confirmJoinButton").disabled=false;
- document.getElementById("joinRoomInfo").textContent="Checking Room "+(roomNumber||"")+"...";
- document.getElementById("joinModal").classList.remove("hidden");
- try{
-  await initFirebase();
-  waitingRoom=await findRoomForJoin(amount,roomId);
-  if(waitingRoom){
-   const a=waitingRoom.player1Team==="A" || waitingRoom.player2Team==="A";
-   const b=waitingRoom.player1Team==="B" || waitingRoom.player2Team==="B";
-   const full=waitingRoom.status==="full" || (waitingRoom.playerCount||0)>=2;
-   document.getElementById("teamAButton").disabled=a; document.getElementById("teamBButton").disabled=b;
-   document.getElementById("teamAButton").classList.toggle("disabled-team",a); document.getElementById("teamBButton").classList.toggle("disabled-team",b);
-   if(full){document.getElementById("joinRoomInfo").textContent="🔒 Room "+(roomNumber||"")+" is full. Please choose the other room.";document.getElementById("confirmJoinButton").disabled=true;}
-   else if(a && b){document.getElementById("joinRoomInfo").textContent="🔒 Both teams are already selected in this room.";document.getElementById("confirmJoinButton").disabled=true;}
-   else document.getElementById("joinRoomInfo").textContent="Room "+(roomNumber||"")+" has 1 player. Choose the available team.";
-  }else{
-   document.getElementById("joinRoomInfo").textContent="Room "+(roomNumber||"")+" is empty. Choose either team.";
-  }
- }catch(error){console.error(error);document.getElementById("joinRoomInfo").textContent="Could not check room.";}
+async function openJoinModal(
+amount,
+prize,
+roomId=null
+){
+
+if(!currentUser){
+
+alert("Please login first.");
+
+showLogin();
+
+return;
+
+}
+
+selectedAmount=amount;
+selectedPrize=prize;
+selectedTeam=null;
+waitingRoom=null;
+
+document
+.getElementById("joinAmount")
+.textContent=
+"₹"+money(amount);
+
+document
+.getElementById("joinPrize")
+.textContent=
+"₹"+money(prize);
+
+document
+.getElementById("teamAButton")
+.textContent=
+selectedMatch.teamA;
+
+document
+.getElementById("teamBButton")
+.textContent=
+selectedMatch.teamB;
+
+document
+.getElementById("teamAButton")
+.classList.remove(
+"selected",
+"disabled-team"
+);
+
+document
+.getElementById("teamBButton")
+.classList.remove(
+"selected",
+"disabled-team"
+);
+
+document
+.getElementById("joinRoomInfo")
+.textContent=
+"Checking available room...";
+
+document
+.getElementById("joinModal")
+.classList.remove("hidden");
+
+try{
+
+await initFirebase();
+
+waitingRoom=
+roomId
+?await getRoomById(roomId)
+:await findWaitingRoom(amount);
+
+if(waitingRoom){
+
+document
+.getElementById("joinRoomInfo")
+.textContent=
+"Room is waiting for Player 2. Choose the available team.";
+
+}else{
+
+document
+.getElementById("joinRoomInfo")
+.textContent=
+"No waiting room. You will automatically create the next room.";
+
+}
+
+}catch(error){
+
+console.error(error);
+
+document
+.getElementById("joinRoomInfo")
+.textContent=
+"Could not check room.";
+
+}
+
 }
 
 
 function selectTeam(team){
- const button=team==="A"?document.getElementById("teamAButton"):document.getElementById("teamBButton");
- if(button.disabled)return;
- selectedTeam=team;
- document.getElementById("teamAButton").classList.toggle("selected",team==="A");
- document.getElementById("teamBButton").classList.toggle("selected",team==="B");
+
+if(waitingRoom && waitingRoom.player1Team===team){
+
+alert("That team is already selected in this room. Please choose the other team.");
+return;
+
+}
+
+selectedTeam=team;
+
+document
+.getElementById("teamAButton")
+.classList.toggle(
+"selected",
+team==="A"
+);
+
+document
+.getElementById("teamBButton")
+.classList.toggle(
+"selected",
+team==="B"
+);
+
+if(waitingRoom){
+
+document
+.getElementById("teamAButton")
+.classList.toggle(
+"disabled-team",
+waitingRoom.player1Team==="A"
+);
+
+document
+.getElementById("teamBButton")
+.classList.toggle(
+"disabled-team",
+waitingRoom.player1Team==="B"
+);
+
+}
+
 }
 
 
@@ -2521,8 +2510,6 @@ selectedAmount=null;
 selectedPrize=null;
 selectedTeam=null;
 waitingRoom=null;
-window.selectedRoomId=null;
-window.selectedRoomNumber=null;
 
 }
 
@@ -2579,51 +2566,357 @@ JOIN H2H
 ===================================================== */
 
 async function confirmJoin(){
- const button=document.getElementById("confirmJoinButton");
- if(!currentUser){alert("Please login first.");return;}
- if(!selectedMatch){alert("Please select a match.");return;}
- if(matchHasStarted(selectedMatch)){alert("🔒 This match has already started. H2H joining is closed.");return;}
- if(!selectedAmount){alert("Please select a contest.");return;}
- if(!selectedTeam){alert("Please select your team.");return;}
- button.disabled=true; button.textContent="Joining...";
- try{
-  await initFirebase();
-  const {doc,collection,runTransaction,writeBatch,serverTimestamp,arrayUnion}=window.firestoreFunctions;
-  if(await playerAlreadyHasRoom()) throw new Error("You already have an H2H room for this match and category.");
-  const rooms=await getCategoryRooms(selectedAmount);
-  let targetRoom=null;
-  if(window.selectedRoomId) targetRoom=rooms.find(r=>r.id===window.selectedRoomId)||null;
-  else targetRoom=rooms.find(r=>r.status!=="full" && (r.playerCount||0)<2)||null;
-  if(targetRoom){
-   await runTransaction(db,async transaction=>{
-    const roomRef=doc(db,"rooms",targetRoom.id); const snap=await transaction.get(roomRef);
-    if(!snap.exists()) throw new Error("Room is no longer available.");
-    const room=snap.data();
-    if(room.status==="full" || (room.playerCount||0)>=2) throw new Error("This room is already full. Please choose the other room.");
-    if(room.player1Team===selectedTeam || room.player2Team===selectedTeam) throw new Error("That team is already selected in this room. Choose the other team.");
-    const memberRef=doc(db,"rooms",targetRoom.id,"members",currentUser.uid);
-    const playerRef=doc(db,"players",currentUser.uid);
-    if((room.playerCount||0)===0){
-      transaction.update(roomRef,{player1Uid:currentUser.uid,player1Team:selectedTeam,player2Uid:null,player2Team:null,playerCount:1,status:"waiting",updatedAt:serverTimestamp()});
-    }else{
-      transaction.update(roomRef,{player2Uid:currentUser.uid,player2Team:selectedTeam,playerCount:2,status:"full",updatedAt:serverTimestamp()});
-    }
-    transaction.set(memberRef,{uid:currentUser.uid,name:currentPlayer.name,phone:currentPlayer.phone,team:selectedTeam,joinedAt:serverTimestamp()});
-    transaction.set(playerRef,{activeRooms:arrayUnion(targetRoom.id),updatedAt:serverTimestamp()},{merge:true});
-   });
-   alert(targetRoom.playerCount===0?"✅ Room "+(window.selectedRoomNumber||"")+" created. Waiting for Player 2. ⏳":"🎉 H2H joined successfully! Room "+(window.selectedRoomNumber||"")+" is now FULL.");
-  }else{
-   if(rooms.length>=2) throw new Error("Both rooms are already occupied. Please choose an available team in Room 1 or Room 2.");
-   const roomNumber=rooms.length+1; const batch=writeBatch(db); const roomRef=doc(collection(db,"rooms"));
-   const memberRef=doc(db,"rooms",roomRef.id,"members",currentUser.uid);
-   batch.set(roomRef,{matchId:selectedMatch.id,amount:selectedAmount,prize:selectedPrize,roomNumber:roomNumber,playerCount:1,status:"waiting",player1Uid:currentUser.uid,player1Team:selectedTeam,player2Uid:null,player2Team:null,winningTeam:null,winnerSetAt:null,winnerSetBy:null,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
-   batch.set(memberRef,{uid:currentUser.uid,name:currentPlayer.name,phone:currentPlayer.phone,team:selectedTeam,joinedAt:serverTimestamp()});
-   batch.set(doc(db,"players",currentUser.uid),{activeRooms:arrayUnion(roomRef.id),updatedAt:serverTimestamp()},{merge:true});
-   await batch.commit(); alert("✅ Room "+roomNumber+" created. Waiting for Player 2. ⏳");
-  }
-  closeJoinModal(); loadMyRooms(); loadCategories();
- }catch(error){console.error(error);alert("Join failed: "+(error.message||error.code||"Unknown error"));}
- finally{button.disabled=false;button.textContent="Join H2H";}
+
+const button=
+document
+.getElementById("confirmJoinButton");
+
+if(!currentUser){
+
+alert("Please login first.");
+
+return;
+
+}
+
+if(!selectedMatch){
+
+alert("Please select a match.");
+
+return;
+
+}
+
+if(!selectedAmount){
+
+alert("Please select a contest.");
+
+return;
+
+}
+
+if(!selectedTeam){
+
+alert("Please select your team.");
+
+return;
+
+}
+
+button.disabled=true;
+button.textContent="Joining...";
+
+try{
+
+await initFirebase();
+
+const {
+doc,
+collection,
+runTransaction,
+writeBatch,
+serverTimestamp,
+arrayUnion
+}=
+window.firestoreFunctions;
+
+if(
+await playerAlreadyHasRoom()
+){
+
+throw new Error(
+"You already have an H2H room for this match and category."
+);
+
+}
+
+const waiting=
+await findWaitingRoom(
+selectedAmount
+);
+
+
+if(waiting){
+
+if(
+waiting.player1Team===
+selectedTeam
+){
+
+throw new Error(
+"You cannot select the same team as the waiting player."
+);
+
+}
+
+
+await runTransaction(
+
+db,
+
+async transaction=>{
+
+const roomRef=
+doc(
+db,
+"rooms",
+waiting.id
+);
+
+const roomSnap=
+await transaction.get(
+roomRef
+);
+
+if(!roomSnap.exists()){
+
+throw new Error(
+"Room is no longer available."
+);
+
+}
+
+const room=
+roomSnap.data();
+
+if(
+room.status!=="waiting"||
+room.playerCount!==1
+){
+
+throw new Error(
+"This room was just filled. Please try again."
+);
+
+}
+
+if(
+room.player1Team===
+selectedTeam
+){
+
+throw new Error(
+"That team is already selected."
+);
+
+}
+
+const memberRef=
+doc(
+db,
+"rooms",
+waiting.id,
+"members",
+currentUser.uid
+);
+
+transaction.update(
+
+roomRef,
+
+{
+player2Uid:
+currentUser.uid,
+
+player2Team:
+selectedTeam,
+
+playerCount:2,
+
+status:"full",
+
+updatedAt:
+serverTimestamp()
+}
+
+);
+
+transaction.set(
+
+memberRef,
+
+{
+uid:currentUser.uid,
+name:currentPlayer.name,
+phone:currentPlayer.phone,
+team:selectedTeam,
+joinedAt:serverTimestamp()
+}
+
+);
+
+const playerRef=
+doc(
+db,
+"players",
+currentUser.uid
+);
+
+transaction.set(
+
+playerRef,
+
+{
+activeRooms:
+arrayUnion(waiting.id),
+
+updatedAt:
+serverTimestamp()
+
+},
+
+{merge:true}
+
+);
+
+}
+
+);
+
+alert(
+"🎉 H2H joined successfully! The room is now FULL."
+);
+
+}else{
+
+
+/* CREATE ROOM */
+
+const batch=
+writeBatch(db);
+
+const roomRef=
+doc(
+collection(db,"rooms")
+);
+
+const memberRef=
+doc(
+db,
+"rooms",
+roomRef.id,
+"members",
+currentUser.uid
+);
+
+batch.set(
+
+roomRef,
+
+{
+matchId:selectedMatch.id,
+
+amount:selectedAmount,
+
+prize:selectedPrize,
+
+playerCount:1,
+
+status:"waiting",
+
+player1Uid:
+currentUser.uid,
+
+player1Team:
+selectedTeam,
+
+player2Uid:null,
+
+player2Team:null,
+
+winningTeam:null,
+
+winnerSetAt:null,
+
+winnerSetBy:null,
+
+createdAt:
+serverTimestamp(),
+
+updatedAt:
+serverTimestamp()
+
+}
+
+);
+
+
+batch.set(
+
+memberRef,
+
+{
+uid:currentUser.uid,
+
+name:currentPlayer.name,
+
+phone:currentPlayer.phone,
+
+team:selectedTeam,
+
+joinedAt:serverTimestamp()
+
+}
+
+);
+
+
+const playerRef=
+doc(
+db,
+"players",
+currentUser.uid
+);
+
+batch.set(
+
+playerRef,
+
+{
+activeRooms:
+arrayUnion(roomRef.id),
+
+updatedAt:
+serverTimestamp()
+
+},
+
+{merge:true}
+
+);
+
+await batch.commit();
+
+alert(
+"✅ H2H room created. This is the next available room. Waiting for Player 2. ⏳"
+);
+
+}
+
+closeJoinModal();
+
+loadMyRooms();
+
+loadCategories();
+
+}catch(error){
+
+console.error(error);
+
+alert(
+"Join failed: "+
+(error.message||
+error.code||
+"Unknown error")
+);
+
+}finally{
+
+button.disabled=false;
+button.textContent="Join H2H";
+
+}
+
 }
 
 
@@ -3219,8 +3512,6 @@ ${escapeHtml(
 p1.phone||"Unknown"
 )}
 
-${room.player1Uid?`<button type="button" class="chat-btn" onclick="openAdminChat('${room.player1Uid}', '${escapeHtml((p1.name||"Player 1").replace(/'/g,"&#39;"))}')">💬 Chat with ${escapeHtml(p1.name||"Player 1")}</button>`:""}
-
 <br>
 
 Team:
@@ -3256,8 +3547,6 @@ Phone:
 ${escapeHtml(
 p2.phone||"Unknown"
 )}
-
-${room.player2Uid?`<button type="button" class="chat-btn" onclick="openAdminChat('${room.player2Uid}', '${escapeHtml((p2.name||"Player 2").replace(/'/g,"&#39;"))}')">💬 Chat with ${escapeHtml(p2.name||"Player 2")}</button>`:""}
 
 <br>
 
@@ -3789,24 +4078,20 @@ WHATSAPP SUPPORT
 
 function contactAdmin(){
 
-const phone = ADMIN_WHATSAPP;
-
-const message = encodeURIComponent(
+const message=encodeURIComponent(
 "Hello, I need support with Dream Play."
 );
 
-const url =
-"https://wa.me/" +
-phone +
-"?text=" +
+const url=
+"https://wa.me/"+
+ADMIN_WHATSAPP+
+"?text="+
 message;
 
-// Use a normal HTTPS WhatsApp link.
-// Android/browser decides whether to hand off to the installed WhatsApp app.
-window.open(url,"_blank","noopener,noreferrer");
+// Use a normal HTTPS URL so Android/Chrome can hand it to WhatsApp.
+window.location.href=url;
 
 }
-
 
 /* =====================================================
 SHARE DREAM PLAY
@@ -3903,32 +4188,6 @@ event.reason
 
 
 /* =====================================================
-INLINE BUTTON SAFETY
-===================================================== */
-
-window.showLogin=showLogin;
-window.showAdminLogin=showAdminLogin;
-window.focusLogin=focusLogin;
-window.playerLogin=playerLogin;
-window.playerLogout=playerLogout;
-window.adminLogin=adminLogin;
-window.adminLogout=adminLogout;
-window.createMatch=createMatch;
-window.openMatch=openMatch;
-window.backToPlayer=backToPlayer;
-window.openJoinModal=openJoinModal;
-window.selectTeam=selectTeam;
-window.closeJoinModal=closeJoinModal;
-window.confirmJoin=confirmJoin;
-window.viewAdminMatchRooms=viewAdminMatchRooms;
-window.setWinner=setWinner;
-window.deleteMatch=deleteMatch;
-window.deleteOldRooms=deleteOldRooms;
-window.contactAdmin=contactAdmin;
-window.shareDreamPlay=shareDreamPlay;
-
-
-/* =====================================================
 SESSION RESTORE + START
 ===================================================== */
 
@@ -3938,129 +4197,61 @@ try{
 
 await initFirebase();
 
-const {
-onAuthStateChanged
-}=
+const {onAuthStateChanged}=
 window.firebaseFunctions;
 
-await new Promise((resolve)=>{
-
-let finished=false;
-
-const finish=()=>{
-if(finished)return;
-finished=true;
-resolve();
-};
-
-const unsubscribe=
-onAuthStateChanged(
-auth,
-async (user)=>{
+onAuthStateChanged(auth,async(user)=>{
 
 if(!user){
-
 currentUser=null;
 currentPlayer=null;
 showLogin();
-finish();
 return;
-
 }
 
 currentUser=user;
 
 if(user.uid===ADMIN_UID){
-
 showAdminPage();
-
-enableAdminNotifications().catch(err=>{
-console.error(
-"FCM notification setup failed:",
-err
-);
-});
-
-finish();
 return;
-
 }
 
 try{
 
-const {
-doc,
-getDoc
-}=
+const {doc,getDoc}=
 window.firestoreFunctions;
 
-const playerSnap=
-await getDoc(
-doc(
-db,
-"players",
-user.uid
-)
+const snap=await getDoc(
+ doc(db,"players",user.uid)
 );
 
-if(
-!playerSnap.exists()
-){
-
+if(!snap.exists()){
 await window.firebaseFunctions.signOut(auth);
-
 currentUser=null;
 currentPlayer=null;
 showLogin();
-finish();
 return;
-
 }
 
-const playerData=
-playerSnap.data();
-
+const data=snap.data();
 currentPlayer={
 uid:user.uid,
-name:playerData.name||"",
-phone:playerData.phone||""
+name:data.name||"",
+phone:data.phone||""
 };
 
 showPlayerPage();
 
 }catch(error){
-
-console.error(
-"Could not restore player session:",
-error
-);
-
-await window.firebaseFunctions.signOut(auth);
-
-currentUser=null;
-currentPlayer=null;
+console.error("Session restore failed:",error);
 showLogin();
-
 }
-
-finish();
-
-}
-);
 
 });
 
 }catch(error){
-
-console.error(
-"Session restore failed:",
-error
-);
-
-currentUser=null;
-currentPlayer=null;
+console.error("Firebase/session startup failed:",error);
 showLogin();
-
 }
 
 }
@@ -4069,17 +4260,8 @@ window.addEventListener(
 "DOMContentLoaded",
 function(){
 
-const dateInput=
-document.getElementById(
-"adminMatchDate"
-);
-
-if(dateInput){
-
-dateInput.value=
-todayString();
-
-}
+const dateInput=document.getElementById("adminMatchDate");
+if(dateInput)dateInput.value=todayString();
 
 restoreDreamPlaySession();
 
