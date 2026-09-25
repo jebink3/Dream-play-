@@ -3077,6 +3077,38 @@ match.time
 
 </div>
 
+<div class="publish-box">
+
+<strong>🏆 Publish Result for ALL H2H Contests</strong>
+
+<p class="small" style="margin:7px 0 0">
+One click will publish the selected winning team to every FULL room in this match, across all contest amounts. Both joined players will see the result in My H2H Rooms.
+</p>
+
+<div class="result-buttons">
+
+<button
+type="button"
+class="btn-green"
+onclick="publishMatchResult('${match.id}','A')">
+
+🏆
+${escapeHtml(match.teamA)}
+
+</button>
+
+<button
+type="button"
+class="btn-green"
+onclick="publishMatchResult('${match.id}','B')">
+
+🏆
+${escapeHtml(match.teamB)}
+
+</button>
+
+</div>
+
 <div class="admin-match-actions">
 
 <button
@@ -3096,6 +3128,8 @@ onclick="deleteMatch('${match.id}')">
 🗑️ Delete Match
 
 </button>
+
+</div>
 
 </div>
 
@@ -3402,48 +3436,7 @@ room.winningTeam==="A"
 </div>
 
 `
-
-:
-
-room.status==="full"
-
-?`
-
-<div class="publish-box">
-
-<strong>
-Publish Winner
-</strong>
-
-<div class="result-buttons">
-
-<button
-type="button"
-class="btn-green"
-onclick="setWinner('${room.id}','A')">
-
-🏆
-${escapeHtml(match.teamA)}
-
-</button>
-
-<button
-type="button"
-class="btn-green"
-onclick="setWinner('${room.id}','B')">
-
-🏆
-${escapeHtml(match.teamB)}
-
-</button>
-
-</div>
-
-</div>
-
-`
 :""
-
 }
 
 </div>
@@ -3592,7 +3585,27 @@ winningTeam
 
 const answer=
 confirm(
-"Are you sure you want to publish this winner?"
+"This old single-room result button is no longer used. Publish the result from the match-level button instead."
+);
+
+if(!answer)return;
+
+}
+
+
+/* =====================================================
+PUBLISH RESULT FOR ALL CONTESTS IN ONE MATCH
+===================================================== */
+
+async function publishMatchResult(
+matchId,
+winningTeam
+){
+
+const answer=confirm(
+"Publish " +
+(winningTeam==="A" ? "Team A" : "Team B") +
+" as the winner for ALL FULL H2H rooms in this match?\n\nThis will update every contest at once and both joined players will see the result."
 );
 
 if(!answer)return;
@@ -3602,42 +3615,82 @@ try{
 await initFirebase();
 
 const {
+collection,
+query,
+where,
+getDocs,
 doc,
-updateDoc,
-serverTimestamp
-}=
-window.firestoreFunctions;
+writeBatch,
+serverTimestamp,
+getDoc
+}=window.firestoreFunctions;
 
-await updateDoc(
+const matchSnap=await getDoc(
+  doc(db,"matches",matchId)
+);
 
-doc(
-db,
-"rooms",
-roomId
-),
-
-{
-
-winningTeam:
-winningTeam,
-
-winnerSetAt:
-serverTimestamp(),
-
-winnerSetBy:
-ADMIN_UID,
-
-updatedAt:
-serverTimestamp()
-
+if(!matchSnap.exists()){
+  throw new Error("Match not found.");
 }
 
+const match=matchSnap.data();
+
+const roomsSnap=await getDocs(
+  query(
+    collection(db,"rooms"),
+    where("matchId","==",matchId)
+  )
 );
+
+const fullRooms=roomsSnap.docs.filter(roomDoc=>{
+  const room=roomDoc.data();
+  return room.status==="full" && Number(room.playerCount||0)===2;
+});
+
+if(fullRooms.length===0){
+  alert("There are no FULL H2H rooms for this match yet.");
+  return;
+}
+
+const batch=writeBatch(db);
+const now=serverTimestamp();
+
+fullRooms.forEach(roomDoc=>{
+  batch.update(roomDoc.ref,{
+    winningTeam:winningTeam,
+    winnerSetAt:now,
+    winnerSetBy:ADMIN_UID,
+    updatedAt:now
+  });
+});
+
+// Also save the match-level result so Admin can see that the result
+// was published for the whole match.
+batch.update(
+  doc(db,"matches",matchId),
+  {
+    winningTeam:winningTeam,
+    winnerSetAt:now,
+    winnerSetBy:ADMIN_UID,
+    updatedAt:now
+  }
+);
+
+await batch.commit();
+
+const winnerName=
+winningTeam==="A"
+?match.teamA
+:match.teamB;
 
 alert(
-"🏆 Winner published successfully!"
+"🏆 Result published successfully!\n\n" +
+fullRooms.length +
+" full H2H room(s) updated.\nWinner: " +
+ winnerName
 );
 
+loadAdminMatches();
 loadAdminRooms();
 
 }catch(error){
@@ -3645,8 +3698,8 @@ loadAdminRooms();
 console.error(error);
 
 alert(
-"Could not publish winner: "+
-(error.message||error.code)
+"Could not publish match result: " +
+(error.message||error.code||"Unknown error")
 );
 
 }
