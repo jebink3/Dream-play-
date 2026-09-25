@@ -1301,10 +1301,19 @@ appModule.initializeApp(FIREBASE_CONFIG);
 auth=
 authModule.getAuth(firebaseApp);
 
-await authModule.setPersistence(
-  auth,
-  authModule.browserLocalPersistence
-);
+try{
+  // Keep the Firebase login across browser refreshes/reopens.
+  await authModule.setPersistence(
+    auth,
+    authModule.indexedDBLocalPersistence
+  );
+}catch(e){
+  // Fallback for browsers where IndexedDB persistence is unavailable.
+  await authModule.setPersistence(
+    auth,
+    authModule.browserLocalPersistence
+  );
+}
 
 db=
 firestoreModule.getFirestore(firebaseApp);
@@ -1318,7 +1327,11 @@ createUserWithEmailAndPassword:
 authModule.createUserWithEmailAndPassword,
 
 signOut:
-authModule.signOut
+authModule.signOut,
+
+// IMPORTANT: needed to restore the login after refresh.
+onAuthStateChanged:
+authModule.onAuthStateChanged
 
 };
 
