@@ -248,6 +248,23 @@ input,select{
   margin-top:12px;
 }
 
+
+.room-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+.next-room-card{
+  border:2px dashed #bfdbfe;
+  background:#f8fbff;
+}
+.next-room-card .small{
+  margin:12px 0;
+}
+@media(max-width:650px){
+  .room-list{grid-template-columns:1fr;}
+}
 .room-card{
   border:2px solid #e2e8f0;
   border-radius:16px;
@@ -1621,6 +1638,11 @@ phone:phone
 
 };
 
+try{
+  localStorage.setItem("dreamPlayPlayerPhone",phone);
+  localStorage.setItem("dreamPlayPlayerName",name);
+}catch(e){}
+
 const {
 doc,
 setDoc,
@@ -1686,6 +1708,10 @@ console.error(error);
 
 }
 
+try{
+  localStorage.removeItem("dreamPlayPlayerPhone");
+  localStorage.removeItem("dreamPlayPlayerName");
+}catch(e){}
 currentUser=null;
 currentPlayer=null;
 selectedMatch=null;
@@ -2136,120 +2162,101 @@ CATEGORIES
 
 async function loadCategories(){
 
-const box=
-document.getElementById("categories");
-
+const box=document.getElementById("categories");
 box.innerHTML="Loading...";
 
 try{
 
 await initFirebase();
 
-const {
-collection,
-getDocs,
-query,
-where
-}=
-window.firestoreFunctions;
+const {collection,getDocs,query,where}=window.firestoreFunctions;
 
 const snapshot=await getDocs(
-query(
-collection(db,"rooms"),
-where("matchId","==",selectedMatch.id)
-)
+  query(
+    collection(db,"rooms"),
+    where("matchId","==",selectedMatch.id)
+  )
 );
 
 const allRooms=[];
-
 snapshot.forEach(item=>{
-
-allRooms.push({
- id:item.id,
- ...item.data()
-});
-
+  allRooms.push({id:item.id,...item.data()});
 });
 
 box.innerHTML=CONTESTS.map(contest=>{
 
-const waitingRooms=allRooms
-.filter(room=>
-Number(room.amount)===Number(contest.amount)
-&& room.status==="waiting"
-&& Number(room.playerCount||1)===1
-)
-.sort((a,b)=>{
-const at=a.createdAt?.seconds||0;
-const bt=b.createdAt?.seconds||0;
-return at-bt;
-});
+  const waitingRooms=allRooms
+    .filter(room=>
+      Number(room.amount)===Number(contest.amount) &&
+      room.status==="waiting" &&
+      Number(room.playerCount||1)===1
+    )
+    .sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0))
+    .slice(0,2);
 
-const room=waitingRooms[0];
+  let roomsHtml="";
 
-let content="";
+  waitingRooms.forEach((room,index)=>{
+    const teamASelected=room.player1Team==="A";
+    const teamBSelected=room.player1Team==="B";
 
-if(room){
+    roomsHtml+=`
+      <div class="room-card waiting-room">
+        <div class="room-title">
+          <strong>ROOM ${index+1}</strong>
+          <span class="badge waiting">WAITING 1/2</span>
+        </div>
 
-const teamASelected=room.player1Team==="A";
-const teamBSelected=room.player1Team==="B";
+        <div class="team-status ${teamASelected?"selected":""}">
+          <span>🏏 ${escapeHtml(selectedMatch.teamA)}</span>
+          <strong>${teamASelected?"ALREADY SELECTED 🔒":"AVAILABLE"}</strong>
+        </div>
 
-content=`
-<div class="room-card waiting-room">
+        <div class="team-status ${teamBSelected?"selected":""}">
+          <span>🏏 ${escapeHtml(selectedMatch.teamB)}</span>
+          <strong>${teamBSelected?"ALREADY SELECTED 🔒":"AVAILABLE"}</strong>
+        </div>
 
-<div class="room-title">
-<strong>WAITING ROOM</strong>
-<span class="badge waiting">1/2</span>
-</div>
+        <button type="button" class="btn-blue"
+          onclick="openJoinModal(${contest.amount},${contest.prize},'${room.id}')">
+          Join Room ${index+1}
+        </button>
+      </div>
+    `;
+  });
 
-<div class="team-status ${teamASelected?"selected":""}">
-<span>🏏 ${escapeHtml(selectedMatch.teamA)}</span>
-<strong>${teamASelected?"ALREADY SELECTED 🔒":"AVAILABLE"}</strong>
-</div>
+  // Keep two room slots visible to players. A missing slot means the next room
+  // will be created when the player joins it.
+  if(waitingRooms.length<2){
+    const nextRoomNumber=waitingRooms.length+1;
+    roomsHtml+=`
+      <div class="room-card next-room-card">
+        <div class="room-title">
+          <strong>ROOM ${nextRoomNumber}</strong>
+          <span class="badge waiting">NEXT</span>
+        </div>
+        <div class="small">No waiting player yet.</div>
+        <button type="button" class="btn-blue"
+          onclick="openJoinModal(${contest.amount},${contest.prize})">
+          ➕ Join Room ${nextRoomNumber}
+        </button>
+      </div>
+    `;
+  }
 
-<div class="team-status ${teamBSelected?"selected":""}">
-<span>🏏 ${escapeHtml(selectedMatch.teamB)}</span>
-<strong>${teamBSelected?"ALREADY SELECTED 🔒":"AVAILABLE"}</strong>
-</div>
-
-<button type="button" class="btn-blue"
-onclick="openJoinModal(${contest.amount},${contest.prize},'${room.id}')">
-Join Waiting Room
-</button>
-
-</div>
-`;
-
-}else{
-
-content=`
-<div class="empty" style="padding:10px 4px">
-No waiting room. Create the next room.
-</div>
-
-<button type="button" class="btn-blue"
-onclick="openJoinModal(${contest.amount},${contest.prize})">
-➕ Join ₹${money(contest.amount)}
-</button>
-`;
-
-}
-
-return`
-<div class="category">
-<strong>₹${money(contest.amount)}</strong>
-<div class="prize">Display value ₹${money(contest.prize)}</div>
-${content}
-</div>
-`;
+  return `
+    <div class="category">
+      <strong>₹${money(contest.amount)}</strong>
+      <div class="prize">Display value ₹${money(contest.prize)}</div>
+      <div class="room-list">${roomsHtml}</div>
+    </div>
+  `;
 
 }).join("");
 
 }catch(error){
-
-console.error(error);
-box.innerHTML='<div class="warning">Could not load H2H rooms.</div>';
-
+  console.error(error);
+  box.innerHTML='<div class="warning">Could not load H2H rooms.</div>';
 }
 
 }
@@ -2258,65 +2265,41 @@ box.innerHTML='<div class="warning">Could not load H2H rooms.</div>';
 FIND WAITING ROOM
 ===================================================== */
 
-async function findWaitingRoom(amount){
+async function findWaitingRooms(amount){
 
-const {
-collection,
-getDocs,
-query,
-where,
-limit
-}=
-window.firestoreFunctions;
+const {collection,getDocs,query,where}=window.firestoreFunctions;
 
-const q=
-query(
-
-collection(db,"rooms"),
-
-where(
-"matchId",
-"==",
-selectedMatch.id
-),
-
-where(
-"amount",
-"==",
-amount
-),
-
-where(
-"status",
-"==",
-"waiting"
-),
-
-limit(1)
-
+const q=query(
+  collection(db,"rooms"),
+  where("matchId","==",selectedMatch.id),
+  where("amount","==",amount),
+  where("status","==","waiting")
 );
 
-const snapshot=
-await getDocs(q);
+const snapshot=await getDocs(q);
 
-if(snapshot.empty){
-
-return null;
-
-}
-
-const item=
-snapshot.docs[0];
-
-return{
-
-id:item.id,
-...item.data()
-
-};
+return snapshot.docs
+  .map(item=>({id:item.id,...item.data()}))
+  .filter(room=>Number(room.playerCount||1)===1)
+  .sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0))
+  .slice(0,2);
 
 }
 
+async function findWaitingRoom(amount, preferredTeam=null){
+
+const rooms=await findWaitingRooms(amount);
+
+if(!rooms.length)return null;
+
+if(preferredTeam){
+  const available=rooms.find(room=>room.player1Team!==preferredTeam);
+  if(available)return available;
+}
+
+return rooms[0];
+
+}
 
 async function getRoomById(roomId){
 
@@ -2567,41 +2550,12 @@ JOIN H2H
 
 async function confirmJoin(){
 
-const button=
-document
-.getElementById("confirmJoinButton");
+const button=document.getElementById("confirmJoinButton");
 
-if(!currentUser){
-
-alert("Please login first.");
-
-return;
-
-}
-
-if(!selectedMatch){
-
-alert("Please select a match.");
-
-return;
-
-}
-
-if(!selectedAmount){
-
-alert("Please select a contest.");
-
-return;
-
-}
-
-if(!selectedTeam){
-
-alert("Please select your team.");
-
-return;
-
-}
+if(!currentUser){alert("Please login first.");return;}
+if(!selectedMatch){alert("Please select a match.");return;}
+if(!selectedAmount){alert("Please select a contest.");return;}
+if(!selectedTeam){alert("Please select your team.");return;}
 
 button.disabled=true;
 button.textContent="Joining...";
@@ -2611,314 +2565,146 @@ try{
 await initFirebase();
 
 const {
-doc,
-collection,
-runTransaction,
-writeBatch,
-serverTimestamp,
-arrayUnion
-}=
-window.firestoreFunctions;
+  doc,collection,runTransaction,writeBatch,serverTimestamp,arrayUnion
+}=window.firestoreFunctions;
 
-if(
-await playerAlreadyHasRoom()
-){
-
-throw new Error(
-"You already have an H2H room for this match and category."
-);
-
+if(await playerAlreadyHasRoom()){
+  throw new Error("You already have an H2H room for this match and category.");
 }
 
-const waiting=
-await findWaitingRoom(
-selectedAmount
-);
+// Look at BOTH active waiting rooms. This is important:
+// the same team may be selected once in Room 1 and once in Room 2.
+let waitingRooms=await findWaitingRooms(selectedAmount);
 
+let waiting=null;
+
+if(waitingRoom){
+  const fresh=await getRoomById(waitingRoom.id);
+  if(fresh)waiting=fresh;
+}
+
+// If no specific room was opened, choose a waiting room where this team is free.
+if(!waiting){
+  waiting=waitingRooms.find(room=>room.player1Team!==selectedTeam)||null;
+}
 
 if(waiting){
 
-if(
-waiting.player1Team===
-selectedTeam
-){
+  await runTransaction(db,async transaction=>{
 
-throw new Error(
-"You cannot select the same team as the waiting player."
-);
+    const roomRef=doc(db,"rooms",waiting.id);
+    const roomSnap=await transaction.get(roomRef);
 
-}
+    if(!roomSnap.exists())throw new Error("Room is no longer available.");
 
+    const room=roomSnap.data();
 
-await runTransaction(
+    if(room.status!=="waiting" || Number(room.playerCount)!==1){
+      throw new Error("This room was just filled. Please try again.");
+    }
 
-db,
+    if(room.player1Team===selectedTeam){
+      throw new Error("That team is already selected in this room. Please choose the other room or team.");
+    }
 
-async transaction=>{
+    const memberRef=doc(db,"rooms",waiting.id,"members",currentUser.uid);
 
-const roomRef=
-doc(
-db,
-"rooms",
-waiting.id
-);
+    transaction.update(roomRef,{
+      player2Uid:currentUser.uid,
+      player2Team:selectedTeam,
+      playerCount:2,
+      status:"full",
+      updatedAt:serverTimestamp()
+    });
 
-const roomSnap=
-await transaction.get(
-roomRef
-);
+    transaction.set(memberRef,{
+      uid:currentUser.uid,
+      name:currentPlayer.name,
+      phone:currentPlayer.phone,
+      team:selectedTeam,
+      joinedAt:serverTimestamp()
+    });
 
-if(!roomSnap.exists()){
+    transaction.set(
+      doc(db,"players",currentUser.uid),
+      {
+        activeRooms:arrayUnion(waiting.id),
+        updatedAt:serverTimestamp()
+      },
+      {merge:true}
+    );
 
-throw new Error(
-"Room is no longer available."
-);
+  });
 
-}
-
-const room=
-roomSnap.data();
-
-if(
-room.status!=="waiting"||
-room.playerCount!==1
-){
-
-throw new Error(
-"This room was just filled. Please try again."
-);
-
-}
-
-if(
-room.player1Team===
-selectedTeam
-){
-
-throw new Error(
-"That team is already selected."
-);
-
-}
-
-const memberRef=
-doc(
-db,
-"rooms",
-waiting.id,
-"members",
-currentUser.uid
-);
-
-transaction.update(
-
-roomRef,
-
-{
-player2Uid:
-currentUser.uid,
-
-player2Team:
-selectedTeam,
-
-playerCount:2,
-
-status:"full",
-
-updatedAt:
-serverTimestamp()
-}
-
-);
-
-transaction.set(
-
-memberRef,
-
-{
-uid:currentUser.uid,
-name:currentPlayer.name,
-phone:currentPlayer.phone,
-team:selectedTeam,
-joinedAt:serverTimestamp()
-}
-
-);
-
-const playerRef=
-doc(
-db,
-"players",
-currentUser.uid
-);
-
-transaction.set(
-
-playerRef,
-
-{
-activeRooms:
-arrayUnion(waiting.id),
-
-updatedAt:
-serverTimestamp()
-
-},
-
-{merge:true}
-
-);
-
-}
-
-);
-
-alert(
-"🎉 H2H joined successfully! The room is now FULL."
-);
+  alert("🎉 H2H joined successfully! Room is now FULL.");
 
 }else{
 
+  // There can be at most TWO waiting rooms for each category.
+  waitingRooms=await findWaitingRooms(selectedAmount);
 
-/* CREATE ROOM */
+  if(waitingRooms.length>=2){
+    throw new Error(
+      "Both waiting rooms are already using this team. Please choose the other team."
+    );
+  }
 
-const batch=
-writeBatch(db);
+  const batch=writeBatch(db);
+  const roomRef=doc(collection(db,"rooms"));
+  const memberRef=doc(db,"rooms",roomRef.id,"members",currentUser.uid);
 
-const roomRef=
-doc(
-collection(db,"rooms")
-);
+  batch.set(roomRef,{
+    matchId:selectedMatch.id,
+    amount:selectedAmount,
+    prize:selectedPrize,
+    playerCount:1,
+    status:"waiting",
+    player1Uid:currentUser.uid,
+    player1Team:selectedTeam,
+    player2Uid:null,
+    player2Team:null,
+    winningTeam:null,
+    winnerSetAt:null,
+    winnerSetBy:null,
+    createdAt:serverTimestamp(),
+    updatedAt:serverTimestamp()
+  });
 
-const memberRef=
-doc(
-db,
-"rooms",
-roomRef.id,
-"members",
-currentUser.uid
-);
+  batch.set(memberRef,{
+    uid:currentUser.uid,
+    name:currentPlayer.name,
+    phone:currentPlayer.phone,
+    team:selectedTeam,
+    joinedAt:serverTimestamp()
+  });
 
-batch.set(
+  batch.set(
+    doc(db,"players",currentUser.uid),
+    {
+      activeRooms:arrayUnion(roomRef.id),
+      updatedAt:serverTimestamp()
+    },
+    {merge:true}
+  );
 
-roomRef,
+  await batch.commit();
 
-{
-matchId:selectedMatch.id,
-
-amount:selectedAmount,
-
-prize:selectedPrize,
-
-playerCount:1,
-
-status:"waiting",
-
-player1Uid:
-currentUser.uid,
-
-player1Team:
-selectedTeam,
-
-player2Uid:null,
-
-player2Team:null,
-
-winningTeam:null,
-
-winnerSetAt:null,
-
-winnerSetBy:null,
-
-createdAt:
-serverTimestamp(),
-
-updatedAt:
-serverTimestamp()
-
-}
-
-);
-
-
-batch.set(
-
-memberRef,
-
-{
-uid:currentUser.uid,
-
-name:currentPlayer.name,
-
-phone:currentPlayer.phone,
-
-team:selectedTeam,
-
-joinedAt:serverTimestamp()
-
-}
-
-);
-
-
-const playerRef=
-doc(
-db,
-"players",
-currentUser.uid
-);
-
-batch.set(
-
-playerRef,
-
-{
-activeRooms:
-arrayUnion(roomRef.id),
-
-updatedAt:
-serverTimestamp()
-
-},
-
-{merge:true}
-
-);
-
-await batch.commit();
-
-alert(
-"✅ H2H room created. This is the next available room. Waiting for Player 2. ⏳"
-);
-
+  alert("✅ New H2H room created. Waiting for Player 2. ⏳");
 }
 
 closeJoinModal();
-
-loadMyRooms();
-
-loadCategories();
+await loadMyRooms();
+await loadCategories();
 
 }catch(error){
-
-console.error(error);
-
-alert(
-"Join failed: "+
-(error.message||
-error.code||
-"Unknown error")
-);
-
+  console.error(error);
+  alert("Join failed: "+(error.message||error.code||"Unknown error"));
 }finally{
-
-button.disabled=false;
-button.textContent="Join H2H";
-
+  button.disabled=false;
+  button.textContent="Join H2H";
 }
 
 }
-
 
 /* =====================================================
 MY ROOMS
@@ -4197,61 +3983,108 @@ try{
 
 await initFirebase();
 
-const {onAuthStateChanged}=
-window.firebaseFunctions;
+const {onAuthStateChanged,signInWithEmailAndPassword}=window.firebaseFunctions;
+
+let firstAuthCallback=true;
 
 onAuthStateChanged(auth,async(user)=>{
 
 if(!user){
-currentUser=null;
-currentPlayer=null;
-showLogin();
-return;
+
+  // Firebase normally restores local persistence automatically. If the browser
+  // did not restore it, use the locally saved player phone to sign in again.
+  const savedPhone=normalizePhone(localStorage.getItem("dreamPlayPlayerPhone")||"");
+  const savedName=localStorage.getItem("dreamPlayPlayerName")||"";
+
+  if(savedPhone && /^[6-9][0-9]{9}$/.test(savedPhone)){
+    try{
+      const credential=await signInWithEmailAndPassword(
+        auth,
+        playerEmail(savedPhone),
+        playerPassword(savedPhone)
+      );
+      currentUser=credential.user;
+      currentPlayer={
+        uid:credential.user.uid,
+        name:savedName,
+        phone:savedPhone
+      };
+
+      // Refresh the player record if it exists.
+      try{
+        const {doc,getDoc}=window.firestoreFunctions;
+        const snap=await getDoc(doc(db,"players",credential.user.uid));
+        if(snap.exists()){
+          const data=snap.data();
+          currentPlayer.name=data.name||savedName;
+          currentPlayer.phone=data.phone||savedPhone;
+        }
+      }catch(e){}
+
+      showPlayerPage();
+      return;
+    }catch(e){
+      console.error("Saved player session restore failed:",e);
+    }
+  }
+
+  currentUser=null;
+  currentPlayer=null;
+  showLogin();
+  return;
 }
 
 currentUser=user;
 
 if(user.uid===ADMIN_UID){
-showAdminPage();
-return;
+  showAdminPage();
+  return;
 }
 
 try{
 
-const {doc,getDoc}=
-window.firestoreFunctions;
+  const {doc,getDoc}=window.firestoreFunctions;
+  const snap=await getDoc(doc(db,"players",user.uid));
 
-const snap=await getDoc(
- doc(db,"players",user.uid)
-);
+  if(!snap.exists()){
+    console.warn("Player profile missing; keeping Firebase session instead of logging out.");
+    const savedPhone=normalizePhone(localStorage.getItem("dreamPlayPlayerPhone")||"");
+    const savedName=localStorage.getItem("dreamPlayPlayerName")||"";
+    currentPlayer={uid:user.uid,name:savedName,phone:savedPhone};
+  }else{
+    const data=snap.data();
+    currentPlayer={
+      uid:user.uid,
+      name:data.name||localStorage.getItem("dreamPlayPlayerName")||"",
+      phone:data.phone||localStorage.getItem("dreamPlayPlayerPhone")||""
+    };
+  }
 
-if(!snap.exists()){
-await window.firebaseFunctions.signOut(auth);
-currentUser=null;
-currentPlayer=null;
-showLogin();
-return;
-}
+  if(currentPlayer.phone){
+    try{
+      localStorage.setItem("dreamPlayPlayerPhone",currentPlayer.phone);
+      localStorage.setItem("dreamPlayPlayerName",currentPlayer.name||"");
+    }catch(e){}
+  }
 
-const data=snap.data();
-currentPlayer={
-uid:user.uid,
-name:data.name||"",
-phone:data.phone||""
-};
-
-showPlayerPage();
+  showPlayerPage();
 
 }catch(error){
-console.error("Session restore failed:",error);
-showLogin();
+  console.error("Session restore profile error:",error);
+  // Do NOT sign the player out just because the profile read failed.
+  currentPlayer={
+    uid:user.uid,
+    name:localStorage.getItem("dreamPlayPlayerName")||"",
+    phone:localStorage.getItem("dreamPlayPlayerPhone")||""
+  };
+  showPlayerPage();
 }
 
 });
 
 }catch(error){
-console.error("Firebase/session startup failed:",error);
-showLogin();
+  console.error("Firebase/session startup failed:",error);
+  showLogin();
 }
 
 }
